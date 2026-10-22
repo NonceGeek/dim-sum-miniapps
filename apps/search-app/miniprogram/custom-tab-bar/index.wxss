@@ -1,0 +1,8 @@
+:host {
+  --td-tab-bar-bg-color: var(--ds-bg);
+  --td-tab-bar-border-color: var(--ds-border);
+  --td-tab-bar-color: var(--ds-text-variant);
+  --td-tab-bar-active-color: var(--ds-primary-container);
+  --td-tab-bar-active-bg: transparent;
+}
+

@@ -1,0 +1,110 @@
+:host {
+  display: block;
+}
+
+.common-dialog {
+  width: calc(100vw - 96rpx) !important;
+  max-width: 620rpx;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--common-dialog-surface, var(--td-bg-color-container)) !important;
+  border: 1px solid var(--common-dialog-border, var(--td-component-border));
+  border-radius: var(--common-dialog-radius, 32rpx) !important;
+  box-shadow: 0 24rpx 80rpx var(--common-dialog-shadow-color, var(--td-mask-active));
+  color: var(--common-dialog-title-color, var(--td-text-color-primary)) !important;
+  --td-dialog-title-color: var(--common-dialog-title-color, var(--td-text-color-primary));
+  --td-dialog-content-color: var(--common-dialog-content-color, var(--td-text-color-secondary));
+  --td-dialog-border-radius: var(--common-dialog-radius, 32rpx);
+  --td-popup-border-radius: var(--common-dialog-radius, 32rpx);
+  --td-popup-bg-color: transparent;
+}
+
+.common-dialog .t-dialog__content {
+  padding: 44rpx 40rpx 0;
+}
+
+.common-dialog .t-dialog__header {
+  color: var(--common-dialog-title-color, var(--td-text-color-primary)) !important;
+  font-size: var(--common-dialog-title-size, 36rpx);
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.common-dialog .t-dialog__header + .t-dialog__body {
+  margin-top: 20rpx;
+}
+
+.common-dialog .t-dialog__body {
+  color: var(--common-dialog-content-color, var(--td-text-color-secondary)) !important;
+  font-size: var(--common-dialog-body-size, 28rpx);
+  line-height: 1.65;
+  text-align: center;
+}
+
+.common-dialog .t-dialog__body-text,
+.common-dialog-content {
+  color: var(--common-dialog-content-color, var(--td-text-color-secondary)) !important;
+  white-space: pre-wrap;
+}
+
+.common-dialog-content {
+  padding: 44rpx 40rpx 0 !important;
+}
+
+.common-dialog .t-dialog__footer {
+  justify-content: center;
+  gap: 24rpx;
+  padding: 40rpx 40rpx 36rpx !important;
+}
+
+.common-dialog
+  .t-dialog__button--horizontal
+  + .t-dialog__button--horizontal {
+  margin-left: 0 !important;
+}
+
+.common-dialog-cancel,
+.common-dialog-confirm {
+  flex: 1 !important;
+  width: auto !important;
+  height: var(--common-dialog-button-height, 88rpx) !important;
+  min-height: var(--common-dialog-button-height, 88rpx) !important;
+  padding: 0 24rpx !important;
+  overflow: hidden;
+  border-radius: var(--common-dialog-button-radius, 999rpx) !important;
+}
+
+.common-dialog-cancel {
+  background-color: var(--common-dialog-cancel-bg, var(--td-bg-color-component)) !important;
+  border: 1px solid var(--common-dialog-border, var(--td-component-border)) !important;
+  color: var(--common-dialog-content-color, var(--td-text-color-secondary)) !important;
+}
+
+.common-dialog-confirm {
+  background: var(--common-dialog-confirm-bg, var(--td-brand-color)) !important;
+  border: none !important;
+  color: var(--common-dialog-confirm-color, var(--td-text-color-anti)) !important;
+  box-shadow: var(--common-dialog-button-shadow, none) !important;
+}
+
+.common-dialog.single-action .common-dialog-confirm {
+  flex: 0 0 calc(50% - 12rpx) !important;
+  width: calc(50% - 12rpx) !important;
+}
+
+.common-dialog-cancel::before,
+.common-dialog-confirm::before {
+  display: none !important;
+}
+
+.common-dialog-cancel .t-button__text,
+.common-dialog-confirm .t-button__text {
+  font-size: var(--common-dialog-action-size, 32rpx) !important;
+  font-weight: 500 !important;
+  line-height: var(--common-dialog-button-height, 88rpx) !important;
+}
+
+.common-dialog.theme-dark {
+  box-shadow: 0 24rpx 80rpx var(--common-dialog-dark-shadow-color, var(--td-mask-active));
+}

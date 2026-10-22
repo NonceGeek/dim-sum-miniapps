@@ -1,0 +1,19 @@
+{
+  "name": "dim-sum-miniapps",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dim Sum WeChat mini programs monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "check": "node scripts/check-workspaces.mjs",
+    "link:workspaces": "node scripts/link-workspaces.mjs",
+    "postinstall": "npm run link:workspaces"
+  },
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  }
+}

@@ -1,0 +1,154 @@
+<view style="{{appearanceStyle}}" class="page ds-page">
+  <view class="search-header">
+    <view class="search-glow"><view class="search-shell">
+      <t-icon name="search" size="34rpx" color="var(--ds-outline)" />
+      <input class="search-native" value="{{keyword}}" placeholder="输入汉字、粤拼或日常短句..." placeholder-class="search-placeholder" bindinput="onSearchChange" bindconfirm="onSearchSubmit" confirm-type="search" />
+      <view wx:if="{{keyword}}" class="search-clear" role="button" aria-label="清空搜索" bindtap="onClearTap"><t-icon name="close" size="28rpx" color="var(--ds-outline)" /></view>
+      <button class="search-submit" bindtap="onSearchSubmit">搜索</button>
+    </view></view>
+  </view>
+
+  <scroll-view class="result-scroll" scroll-y type="list" enhanced show-scrollbar="{{false}}">
+    <view wx:if="{{loading}}" class="empty-state"><text class="empty-state__text">正在搜索…</text></view>
+    <view wx:elif="{{error}}" class="empty-state"><text class="empty-state__text">{{error}}</text><button bindtap="onSearchSubmit">重试</button></view>
+    <view wx:elif="{{!entry && !relatedEntries.length && !mediaExamples.length}}" class="empty-state">
+      <text class="empty-state__text">未找到与「{{keyword}}」相关的结果</text>
+    </view>
+
+    <block wx:else>
+      <view wx:if="{{entry}}" class="section">
+        <view class="section-head">
+          <view class="section-head__lead">
+            <view class="section-head__bar"></view>
+            <text class="section-head__title">精准匹配</text>
+          </view>
+        </view>
+
+        <view class="entry-card ds-card ds-elevated-card">
+          <view class="entry-card__top">
+            <view>
+              <text class="entry-card__word">{{entry.word}}</text>
+              <text class="entry-card__phonetic">{{entry.phonetic}}</text>
+            </view>
+            <view class="entry-card__share" role="button" bind:tap="onShareTap">
+              <t-icon name="share" size="36rpx" color="var(--ds-primary)" />
+            </view>
+          </view>
+
+          <view class="entry-card__body">
+            <text>{{entry.definition}}</text>
+          </view>
+
+          <view wx:if="{{primaryMedia}}" class="entry-card__media">
+            <video wx:if="{{primaryMedia.videoUrl}}" class="media-card__video" src="{{primaryMedia.videoUrl}}" poster="{{primaryMedia.coverImage}}" controls show-center-play-btn />
+            <image wx:elif="{{primaryMedia.coverImage}}" class="media-card__image" src="{{primaryMedia.coverImage}}" mode="aspectFill" data-url="{{primaryMedia.coverImage}}" bindtap="onPreviewImage" />
+            <button wx:if="{{primaryMedia.audioUrl}}" class="entry-card__audio" data-url="{{primaryMedia.audioUrl}}" bindtap="onPlayAudio"><t-icon name="sound" size="28rpx" /><text>播放粤语音频</text></button>
+          </view>
+
+          <view class="entry-card__grid">
+            <view class="entry-card__grid-item">
+              <text class="entry-card__grid-label">来源语料集</text>
+              <text class="entry-card__grid-value">{{entry.sourceCorpus}}</text>
+            </view>
+            <view class="entry-card__grid-item">
+              <text class="entry-card__grid-label">一级分类</text>
+              <text class="entry-card__grid-value">{{entry.categoryPrimary}}</text>
+            </view>
+            <view class="entry-card__grid-item entry-card__grid-item--full">
+              <text class="entry-card__grid-label">二级分类</text>
+              <text class="entry-card__grid-value">{{entry.categorySecondary}}</text>
+            </view>
+          </view>
+
+          <view class="entry-card__tags">
+            <text
+              wx:for="{{entry.tags}}"
+              wx:key="*this"
+              class="entry-tag {{index === 0 ? 'entry-tag--accent' : ''}}"
+            >{{item}}</text>
+          </view>
+
+          <view class="entry-card__id" role="button" bind:tap="onCopyIdTap">
+            <text>{{entry.id}}</text>
+            <t-icon name="file-copy" size="24rpx" color="var(--ds-outline)" />
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{relatedEntries.length}}" class="section">
+        <view class="section-head">
+          <text class="section-head__title section-head__title--plain">相关表达</text>
+          <view class="section-head__action" role="button" bind:tap="onRefreshRelated">
+            <t-icon name="refresh" size="28rpx" color="var(--ds-primary)" />
+            <text>换一批</text>
+          </view>
+        </view>
+
+        <view class="related-grid">
+          <view
+            wx:for="{{relatedEntries}}"
+            wx:key="id"
+            class="related-card ds-card"
+            data-word="{{item.word}}"
+            bind:tap="onRelatedTap"
+          >
+            <text class="related-card__label">{{item.categoryPrimary}}</text>
+            <text class="related-card__word">{{item.word}}</text>
+            <text class="related-card__phonetic">{{item.phonetic}}</text>
+            <text class="related-card__desc">{{item.definition}}</text>
+            <text class="related-card__tag">{{item.tags[0]}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{mediaExamples.length}}" class="section">
+        <view class="section-head">
+          <text class="section-head__title section-head__title--plain">继续探索</text>
+          <view class="section-head__action" role="button" bind:tap="onRefreshMedia">
+            <t-icon name="refresh" size="28rpx" color="var(--ds-primary)" />
+            <text>换一批</text>
+          </view>
+        </view>
+
+        <view class="media-grid">
+          <view wx:for="{{mediaExamples}}" wx:key="id" class="media-card ds-card">
+            <video wx:if="{{item.videoUrl}}" class="media-card__video" src="{{item.videoUrl}}" poster="{{item.coverImage}}" controls show-center-play-btn />
+            <image wx:elif="{{item.coverImage}}" class="media-card__image" src="{{item.coverImage}}" mode="aspectFill" data-url="{{item.coverImage}}" bindtap="onPreviewImage" />
+            <view class="media-card__source">
+              <t-icon name="{{item.videoUrl ? 'video' : item.coverImage ? 'image' : 'sound'}}" size="28rpx" color="var(--ds-primary-container)" />
+              <text>{{item.source}}</text>
+            </view>
+            <text class="media-card__line">{{item.line}}</text>
+            <text class="media-card__phonetic">{{item.phonetic}}</text>
+            <view class="media-card__translation">
+              <text>{{item.translation}}</text>
+            </view>
+            <view class="media-card__footer">
+              <view wx:if="{{item.audioUrl}}" class="media-card__audio" role="button" data-url="{{item.audioUrl}}" bind:tap="onPlayAudio">
+                <t-icon name="sound" size="24rpx" color="var(--ds-text)" />
+                <text>音频</text>
+              </view>
+              <text
+                wx:for="{{item.tags}}"
+                wx:for-item="tag"
+                wx:key="*this"
+                class="media-card__tag"
+              >{{tag}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </scroll-view>
+
+  <app-tab-bar navigate-on-active="{{true}}" />
+
+  <view wx:if="{{sharePickerVisible}}" class="share-picker-mask" catchtap="onShareClose">
+    <view class="share-picker" catchtap="onShareContentTap">
+      <text class="share-picker__title">分享「{{searchedKeyword}}」</text>
+      <view class="share-picker__option"><t-icon name="share" size="30rpx" /><text>分享给微信好友</text><button class="share-picker__native-share" open-type="share" aria-label="分享给微信好友"></button></view>
+      <view class="share-picker__option" role="button" bindtap="onCopyLinkTap"><t-icon name="link" size="30rpx" /><text>复制网页链接</text></view>
+      <view class="share-picker__cancel" role="button" bindtap="onShareClose">取消</view>
+    </view>
+  </view>
+</view>

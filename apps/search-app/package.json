@@ -1,0 +1,17 @@
+{
+  "name": "@dim-sum/search-app",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "@dim-sum/common-dialog": "1.0.0",
+    "tdesign-miniprogram": "^1.15.1"
+  },
+  "devDependencies": {
+    "miniprogram-automator": "^0.12.1",
+    "@dim-sum/app-types": "1.0.0"
+  },
+  "private": true
+}

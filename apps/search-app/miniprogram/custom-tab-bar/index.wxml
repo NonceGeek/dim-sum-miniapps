@@ -1,0 +1,20 @@
+<t-tab-bar
+  wx:if="{{!hidden}}"
+  style="{{appearanceStyle}}"
+  t-class="stitch-tabbar"
+  value="{{value}}"
+  theme="tag"
+  fixed
+  safe-area-inset-bottom
+  split="{{false}}"
+  bindchange="onChange"
+>
+  <t-tab-bar-item
+    wx:for="{{tabs}}"
+    wx:key="value"
+    value="{{item.value}}"
+    icon="{{item.icon}}"
+  >
+    {{item.label}}
+  </t-tab-bar-item>
+</t-tab-bar>

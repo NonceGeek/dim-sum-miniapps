@@ -1,0 +1,232 @@
+page,
+view,
+text,
+scroll-view,
+button,
+image {
+  box-sizing: border-box;
+}
+page {
+  --ds-bg: #fcf9f8;
+  --ds-surface: #ffffff;
+  --ds-surface-low: #f6f3f2;
+  --ds-border: #e5e5e5;
+  --ds-outline: #717786;
+  --ds-primary: #0058bc;
+  --ds-on-primary: #ffffff;
+  --ds-primary-container: #0070eb;
+  --ds-primary-fixed: #d8e2ff;
+  --ds-secondary-container: #2c95fe;
+  --ds-secondary-text: #005fac;
+  --ds-accent: #00c7be;
+  --ds-text: #1b1c1c;
+  --ds-text-variant: #414755;
+  --ds-text-secondary: #636366;
+  --ds-error: #ba1a1a;
+  --ds-black-4: rgba(0, 0, 0, 0.04);
+  --ds-black-12: rgba(0, 0, 0, 0.12);
+  --ds-black-60: rgba(0, 0, 0, 0.6);
+  --ds-primary-10: rgba(0, 88, 188, 0.1);
+  --ds-primary-20: rgba(0, 88, 188, 0.2);
+  --ds-dialog-radius: 32rpx;
+  --ds-dialog-pill: 999rpx;
+  --ds-dialog-button-height: 88rpx;
+  --ds-font-title: 36rpx;
+  --ds-font-body: 28rpx;
+  --ds-font-action: 32rpx;
+  --ds-black-20: rgba(0, 0, 0, 0.2);
+  --ds-black-48: rgba(0, 0, 0, 0.48);
+  --ds-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.04);
+  --ds-login-gradient: linear-gradient(110deg, #0058bc, #0068ff);
+  --td-brand-color: var(--ds-primary);
+  --td-brand-color-active: #004493;
+  --td-bg-color-container: var(--ds-surface);
+  --td-bg-color-component: var(--ds-surface-low);
+  --td-text-color-primary: var(--ds-text);
+  --td-text-color-secondary: var(--ds-text-variant);
+  --td-component-border: var(--ds-border);
+  min-height: 100vh;
+  background: var(--ds-bg);
+  color: var(--ds-text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  page {
+    --ds-bg: #131315;
+    --ds-surface: #1c1c1f;
+    --ds-surface-low: #232327;
+    --ds-border: #35353b;
+    --ds-outline: #8b8f9c;
+    --ds-primary: #7fb1ff;
+    --ds-on-primary: #ffffff;
+    --ds-primary-container: #2b6fd6;
+    --ds-primary-fixed: #17335c;
+    --ds-secondary-container: #2c78c9;
+    --ds-secondary-text: #8fc0ff;
+    --ds-accent: #3fe0d6;
+    --ds-text: #f2f1f0;
+    --ds-text-variant: #c7c8cf;
+    --ds-text-secondary: #9a9ba3;
+    --ds-error: #ffb4a9;
+    --ds-black-4: rgba(255, 255, 255, 0.04);
+    --ds-black-12: rgba(255, 255, 255, 0.12);
+    --ds-black-60: rgba(0, 0, 0, 0.6);
+    --ds-primary-10: rgba(127, 177, 255, 0.1);
+    --ds-primary-20: rgba(127, 177, 255, 0.2);
+    --ds-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.32);
+    --ds-login-gradient: linear-gradient(110deg, #2b6fd6, #0058bc);
+    --td-brand-color-active: #96c4ff;
+  }
+}
+button {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  line-height: normal;
+}
+button::after {
+  border: 0;
+}
+/* Native WeChat buttons used by full-width actions. */
+.ds-action-button {
+  width: 100%;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.ds-action-button--primary {
+  color: var(--ds-on-primary);
+  background: var(--ds-login-gradient);
+  box-shadow: 0 8rpx 40rpx var(--ds-primary-20);
+}
+.ds-action-button--secondary {
+  color: var(--ds-primary);
+  background: var(--ds-surface);
+  border: 2rpx solid var(--ds-home-search-border);
+}
+.ds-action-button--pressed {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+.ds-page {
+  min-height: 100vh;
+  background: var(--ds-bg);
+  color: var(--ds-text);
+}
+.ds-card {
+  border: 2rpx solid var(--ds-border);
+  background: var(--ds-surface);
+  box-shadow: var(--ds-shadow);
+}
+.ds-elevated-card {
+  border-radius: 32rpx;
+}
+.stitch-tabbar {
+  --td-tab-bar-bg-color: var(--ds-bg);
+  --td-tab-bar-border-color: var(--ds-border);
+  --td-tab-bar-color: var(--ds-text-variant);
+  --td-tab-bar-active-color: var(--ds-primary);
+  --td-tab-bar-active-bg: transparent;
+  --td-tab-bar-height: 80rpx;
+  padding: 0;
+  border-radius: 28rpx 28rpx 0 0;
+  box-shadow: 0 -8rpx 40rpx var(--ds-black-4);
+  overflow: hidden;
+}
+.stitch-tabbar .t-tab-bar-item {
+  margin: 12rpx 0 10rpx;
+  padding: 0 8rpx;
+}
+.stitch-tabbar .t-tab-bar-item--crowded {
+  padding: 0 4rpx;
+}
+.stitch-tabbar .t-tab-bar-item__content {
+  border-radius: 18rpx;
+}
+.stitch-tabbar .t-tab-bar-item__text--small {
+  font-size: 24rpx;
+  line-height: 30rpx;
+}
+/* Homepage, search results, and login accents. */
+page {
+  --ds-home-blue: #0068ff;
+  --ds-home-green: #007a68;
+  --ds-home-green-soft: #d9faf1;
+  --ds-home-blue-soft: #eaf1ff;
+  --ds-home-lavender: #f0f2ff;
+  --ds-home-border: #d9dfee;
+  --ds-home-search-border: #cbdcff;
+  --ds-home-white: #ffffff;
+  --ds-home-button-shadow: rgba(0, 104, 255, 0.22);
+  --ds-home-search-shadow: rgba(0, 104, 255, 0.06);
+  --ds-home-placeholder: #b7bfd6;
+  --ds-home-chip: #f1f1ef;
+}
+@media (prefers-color-scheme: dark) {
+  page {
+    --ds-home-blue: #80b5ff;
+    --ds-home-green: #67d8c1;
+    --ds-home-green-soft: #173d35;
+    --ds-home-blue-soft: #1a3151;
+    --ds-home-lavender: #292c47;
+    --ds-home-border: #353e52;
+    --ds-home-search-border: #344e77;
+    --ds-home-placeholder: #8891a8;
+    --ds-home-chip: #28282d;
+    --ds-home-white: #101b2c;
+  }
+}
+/* The same search field is used on the homepage and results page. */
+.search-glow {
+  padding: 3rpx;
+  border-radius: 56rpx;
+  background: linear-gradient(110deg, var(--ds-home-search-border), var(--ds-home-blue-soft), var(--ds-home-search-border));
+  box-shadow: 0 6rpx 20rpx var(--ds-home-search-shadow);
+}
+.search-shell {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 11rpx 12rpx 11rpx 34rpx;
+  border-radius: 54rpx;
+  background: var(--ds-surface);
+}
+.search-native {
+  flex: 1;
+  min-width: 0;
+  height: 64rpx;
+  color: var(--ds-text);
+  font-size: 24rpx;
+}
+.search-placeholder {
+  color: var(--ds-home-placeholder);
+}
+.search-submit {
+  flex: none;
+  min-width: 112rpx;
+  height: 68rpx;
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 40rpx;
+  color: var(--ds-home-white);
+  background: var(--ds-home-blue);
+  font-size: 24rpx;
+  font-weight: 600;
+  box-shadow: 0 5rpx 16rpx var(--ds-home-button-shadow);
+}
+.page .search-submit {
+  margin: 0;
+  min-width: 0;
+  width: 112rpx;
+  flex: 0 0 112rpx;
+}
