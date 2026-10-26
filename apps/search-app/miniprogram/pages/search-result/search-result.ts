@@ -1,4 +1,5 @@
 import { applyAppearance } from '../../utils/appearance'
+import request from '../../utils/http'
 
 type ApiEntry = {
   corpusId: number
@@ -32,16 +33,7 @@ function normalizeMedia(row: ApiEntry): MediaExample {
   }
 }
 function fetchEntries(keyword: string): Promise<SearchResponse> {
-  return new Promise((resolve, reject) => {
-    wx.request({
-      url: `https://search.aidimsum.com/api/search/entries?q=${encodeURIComponent(keyword)}&dataset=all`,
-      success: res => {
-        if (res.statusCode >= 200 && res.statusCode < 300 && res.data && typeof res.data === 'object') resolve(res.data as SearchResponse)
-        else reject(new Error('搜索失败，请稍后重试'))
-      },
-      fail: () => reject(new Error('网络连接失败，请稍后重试')),
-    })
-  })
+  return request<SearchResponse>(`/search/entries?q=${encodeURIComponent(keyword)}&dataset=all`, { auth: false })
 }
 
 let audioPlayer: WechatMiniprogram.InnerAudioContext | undefined

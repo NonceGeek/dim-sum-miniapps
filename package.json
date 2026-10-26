@@ -10,7 +10,8 @@
   "scripts": {
     "check": "node scripts/check-workspaces.mjs",
     "link:workspaces": "node scripts/link-workspaces.mjs",
-    "postinstall": "npm run link:workspaces"
+    "postinstall": "npm run link:workspaces",
+    "test": "node --test packages/*/test/*.test.cjs"
   },
   "engines": {
     "node": ">=20",

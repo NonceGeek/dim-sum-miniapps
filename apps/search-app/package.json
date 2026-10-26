@@ -7,7 +7,9 @@
   "license": "",
   "dependencies": {
     "@dim-sum/common-dialog": "1.0.0",
-    "tdesign-miniprogram": "^1.15.1"
+    "tdesign-miniprogram": "^1.15.1",
+    "@dim-sum/auth": "1.0.0",
+    "@dim-sum/http": "1.0.0"
   },
   "devDependencies": {
     "miniprogram-automator": "^0.12.1",

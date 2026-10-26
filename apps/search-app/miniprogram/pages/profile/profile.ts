@@ -1,7 +1,8 @@
 import { applyAppearance } from '../../utils/appearance'
 import { showCommonDialog } from '@dim-sum/common-dialog'
+import { requireLogin } from '../../utils/auth'
 Page({
-  data: { version: '1.0.0', historyCount: 0, activePopup: '', feedbackTypes: ['内容有误', '发音问题', '功能建议', '其他问题'], feedbackTypeIndex: 0, feedbackText: '', menuItems: [
+  data: { isLoggedIn: false, displayName: '游客', avatarText: '点', avatarUrl: '', version: '1.0.0', historyCount: 0, activePopup: '', feedbackTypes: ['内容有误', '发音问题', '功能建议', '其他问题'], feedbackTypeIndex: 0, feedbackText: '', menuItems: [
     { key: 'history', icon: 'history', title: '最近查询', hint: '' },
     { key: 'appearance', icon: 'palette', title: '外观模式', hint: '' },
     { key: 'feedback', icon: 'service', title: '问题反馈', hint: '欢迎提建议' },
@@ -9,6 +10,7 @@ Page({
   ] },
   onShow() {
     applyAppearance(this)
+    this.syncAuthState()
     try { const version = wx.getAccountInfoSync().miniProgram.version; if (version) this.setData({ version }) } catch (error) { console.warn('Version unavailable', error) }
     const bar = this.getTabBar(); if (bar) bar.setData({ value: '/pages/profile/profile', hidden: Boolean(this.data.activePopup) })
     try {
@@ -16,7 +18,14 @@ Page({
       this.setData({ historyCount: Array.isArray(history) ? history.length : 0 })
     } catch (error) { console.warn('Profile storage unavailable', error) }
   },
+  syncAuthState() {
+    const { userInfo, accessToken, refreshToken } = getApp<IAppOption>().globalData
+    const isLoggedIn = Boolean(userInfo && (accessToken || refreshToken))
+    this.setData({ isLoggedIn, displayName: isLoggedIn ? (userInfo?.name || '我的粤语口袋') : '游客', avatarText: isLoggedIn ? (userInfo?.name || '我').slice(0, 1) : '点', avatarUrl: isLoggedIn ? userInfo?.avatar || '' : '' })
+  },
   onAvatarTap() {
+    if (this.data.isLoggedIn) return
+
     wx.navigateTo({ url: '/pages/login/login?returnToPrevious=1', fail: () => wx.showToast({ title: '登录页面打开失败', icon: 'none' }) })
   },
   onLogoutTap() {
@@ -26,11 +35,12 @@ Page({
       return
     }
     showCommonDialog(this, { title: '退出登录？', content: '退出后保留当前设备的查询记录和外观设置。', showCancel: true, onConfirm: () => {
-      app.globalData.userInfo = undefined
+      app.logout()
+      this.syncAuthState()
       wx.showToast({ title: '已退出登录', icon: 'success' })
     } })
   },
-  onMenuTap(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { key: string }>) {
+  async onMenuTap(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { key: string }>) {
     const key = event.currentTarget.dataset.key
     if (key === 'appearance') {
       wx.showActionSheet({ itemList: ['跟随系统', '浅色', '深色'], success: res => {
@@ -38,16 +48,7 @@ Page({
         catch (error) { wx.showToast({ title: '保存失败，请重试', icon: 'none' }) }
       }, fail: () => {} }); return
     }
-    if (key === 'feedback' && !getApp<IAppOption>().globalData.userInfo) {
-      showCommonDialog(this, {
-        title: '登录后反馈',
-        content: '登录后可以填写问题反馈。',
-        confirmText: '去登录',
-        showCancel: true,
-        onConfirm: () => wx.navigateTo({ url: '/pages/login/login?returnToPrevious=1', fail: () => wx.showToast({ title: '登录页面打开失败', icon: 'none' }) }),
-      })
-      return
-    }
+    if (key === 'feedback' && !await requireLogin(this)) return
     if (key === 'about' || key === 'feedback') { this.setData({ activePopup: key }); const bar = this.getTabBar(); if (bar) bar.setData({ hidden: true }); return }
     try {
       const stored = wx.getStorageSync('cantonese-search-history')
@@ -64,12 +65,8 @@ Page({
   onFeedbackInput(event: any) {
     this.setData({ feedbackText: event.detail.value })
   },
-  onFeedbackSave() {
-    if (!getApp<IAppOption>().globalData.userInfo) {
-      this.closePopup()
-      wx.showToast({ title: '请先登录', icon: 'none' })
-      return
-    }
+  async onFeedbackSave() {
+    if (!await requireLogin(this)) { this.closePopup(); return }
     const text = this.data.feedbackText.trim()
     if (!text) { wx.showToast({ title: '请描述问题或建议', icon: 'none' }); return }
     try {

@@ -4,7 +4,8 @@
     "pages/profile/profile",
     "pages/search-result/search-result",
     "pages/context-question/context-question",
-    "pages/login/login"
+    "pages/login/login",
+    "pages/webview/webview"
   ],
   "window": {
     "navigationBarTextStyle": "@navTxtStyle",

@@ -156,3 +156,11 @@
   font-size: 28rpx;
   font-weight: 600;
 }
+
+
+
+
+
+.profile-identity{flex:1;min-width:0}
+.profile-name-row{display:flex;align-items:center;gap:16rpx}
+.profile-content .profile-header .profile-login{position:absolute;right:28rpx;top:50%;transform:translateY(-50%);z-index:1;flex:none;width:120rpx;min-width:120rpx;max-width:120rpx;height:68rpx;margin:0;padding:0;display:flex;align-items:center;justify-content:center;border-radius:34rpx;background:var(--ds-home-blue-soft);color:var(--ds-home-blue);font-size:28rpx;font-weight:600;line-height:1}

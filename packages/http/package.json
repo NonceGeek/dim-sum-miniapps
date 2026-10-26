@@ -1,0 +1,5 @@
+{
+  "name": "@dim-sum/http", "version": "1.0.0", "private": true,
+  "main": "miniprogram/index.js", "types": "miniprogram/index.d.ts", "miniprogram": "miniprogram",
+  "files": ["miniprogram"], "description": "Guest-aware WeChat requests and bounded authentication retry"
+}
