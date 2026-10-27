@@ -1,7 +1,7 @@
 <view style="{{appearanceStyle}}" class="ds-page"><scroll-view class="profile-scroll" scroll-y enhanced show-scrollbar="{{false}}"><view class="profile-content">
-<view class="profile-header"><image wx:if="{{isLoggedIn && avatarUrl}}" class="avatar" src="{{avatarUrl}}" mode="aspectFill" /><view wx:else class="avatar" role="button" aria-label="登录" bindtap="onAvatarTap">{{avatarText}}</view><view class="profile-identity"><view class="profile-name-row"><text class="profile-name">{{displayName}}</text></view><text class="subtitle">{{isLoggedIn ? '已登录' : '无需登录也可查粤语'}}</text></view><button wx:if="{{!isLoggedIn}}" class="profile-login" size="mini" bindtap="onAvatarTap">登录</button><image class="profile-watermark" src="/public/images/logo.png" mode="aspectFit" aria-hidden="true" /></view>
+<view class="profile-header"><image wx:if="{{isLoggedIn && avatarUrl}}" class="avatar" src="{{avatarUrl}}" mode="aspectFill" /><view wx:else class="avatar" role="button" aria-label="登录" bindtap="onAvatarTap">{{avatarText}}</view><view class="profile-identity"><view class="profile-name-row"><text class="profile-name">{{displayName}}</text></view><text wx:if="{{!isLoggedIn}}" class="subtitle">无需登录也可查粤语</text></view><button wx:if="{{!isLoggedIn}}" class="profile-login" size="mini" bindtap="onAvatarTap">登录</button><image class="profile-watermark" src="/public/images/logo.png" mode="aspectFit" aria-hidden="true" /></view>
 <view class="stats"><view class="stat"><text class="stat-value">{{historyCount}}</text><text class="stat-label">最近查询</text></view></view>
-<view class="menu-list"><button wx:for="{{menuItems}}" wx:key="key" class="menu-row" data-key="{{item.key}}" bindtap="onMenuTap"><view class="menu-left"><view class="menu-icon"><t-icon name="{{item.icon}}" size="32rpx" /></view><text>{{item.title}}</text></view><view class="menu-right"><text>{{item.key === 'history' ? historyCount + ' 条' : item.key === 'appearance' ? appearanceLabel : item.hint}}</text><t-icon name="chevron-right" size="26rpx" /></view></button></view>
+<view class="menu-list"><button wx:for="{{menuItems}}" wx:key="key" class="menu-row" data-key="{{item.key}}" bindtap="onMenuTap"><view class="menu-left"><view class="menu-icon menu-icon--{{item.key}}"><t-icon name="{{item.icon}}" size="40rpx" /></view><text>{{item.title}}</text></view><view class="menu-right"><text>{{item.key === 'history' ? historyCount + ' 条' : item.key === 'appearance' ? appearanceLabel : item.hint}}</text><t-icon name="chevron-right" size="26rpx" /></view></button></view>
 <button class="clear-cache" bindtap="onClearCache"><t-icon name="delete" size="24rpx" /><text>清理临时缓存</text></button><text class="storage-note">收藏和查询记录仅保存在当前设备。</text><text class="version-note">Version: {{version}}</text><view wx:if="{{isLoggedIn}}" class="logout-section"><t-button theme="danger" variant="light" size="large" block bind:tap="onLogoutTap" t-class="logout-btn">退出登录</t-button></view></view></scroll-view>
 <view wx:if="{{activePopup}}" class="profile-popup-mask" catchtap="closePopup">
   <view class="profile-popup" catchtap="onPopupContentTap">
@@ -20,8 +20,8 @@
       <view class="feedback-types">
         <view wx:for="{{feedbackTypes}}" wx:key="*this" class="feedback-type {{feedbackTypeIndex === index ? 'feedback-type--active' : ''}}" data-index="{{index}}" bindtap="onFeedbackTypeTap">{{item}}</view>
       </view>
-      <textarea class="feedback-input" value="{{feedbackText}}" placeholder="描述问题，最多 300 字" maxlength="300" bindinput="onFeedbackInput" />
-      <view class="feedback-save" role="button" bindtap="onFeedbackSave">保存反馈</view>
+      <textarea class="feedback-input" value="{{feedbackText}}" placeholder="描述问题，最多 300 字" maxlength="300" disabled="{{feedbackSubmitting}}" bindinput="onFeedbackInput" />
+      <button class="feedback-save" disabled="{{feedbackSubmitting}}" loading="{{feedbackSubmitting}}" bindtap="onFeedbackSave">{{feedbackSubmitting ? '提交中…' : '提交反馈'}}</button>
     </view>
   </view>
 </view>

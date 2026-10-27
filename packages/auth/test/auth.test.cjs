@@ -108,7 +108,7 @@ test('phone login uses the same session storage and does not call wx.login', asy
 test('sending an SMS does not authenticate or modify a session', async () => {
   const f = fixture(options => {
     assert.equal(options.url, 'https://example.test/api/miniprogram/auth/send-sms');
-    assert.deepEqual(options.data, { phoneNumber: '13800000000' });
+    assert.deepEqual(options.data, { phoneNumber: '13800000000', miniprogramApp: 'test-app' });
     return { statusCode: 200, data: { success: true } };
   });
   assert.deepEqual(await f.auth.sendSms('13800000000'), { success: true });

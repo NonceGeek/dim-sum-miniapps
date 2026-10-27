@@ -98,7 +98,7 @@ function createAuthClient(config) {
     return authenticate(async () => ({ phoneNumber, verificationCode }));
   }
   function sendSms(phoneNumber) {
-    return post(config.sendSmsPath || '/auth/send-sms', { phoneNumber });
+    return post(config.sendSmsPath || '/auth/send-sms', { phoneNumber, miniprogramApp: config.miniprogramApp });
   }
   function refreshAccessToken() {
     if (refreshPromise) return refreshPromise;

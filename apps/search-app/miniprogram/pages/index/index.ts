@@ -1,11 +1,13 @@
 import { applyAppearance } from '../../utils/appearance'
-import { loadRandomContextScenes, type ContextScene } from '../../utils/context-game'
+import { loadRandomContextScenes, type ContextScene } from '../../utils/context-scenes'
 Page({
   data: {
     keyword: '',
     history: [] as { word: string; phonetic: string }[],
     scenes: [] as ContextScene[],
     sceneError: '',
+    scenesLoading: true,
+    scenePlaceholders: [0, 1, 2],
   },
 
   onShow() {
@@ -18,9 +20,14 @@ Page({
     }
   },
 
+  _loadingScenes: false,
   async loadScenes() {
+    if (this._loadingScenes) return
+    this._loadingScenes = true
+    this.setData({ scenesLoading: true, sceneError: '' })
     try { this.setData({ scenes: await loadRandomContextScenes(), sceneError: '' }) }
     catch (error) { this.setData({ scenes: [], sceneError: error instanceof Error ? error.message : '场景加载失败' }) }
+    finally { this._loadingScenes = false; this.setData({ scenesLoading: false }) }
   },
 
   onSearchChange(event: WechatMiniprogram.CustomEvent<{ value: string }>) {
@@ -74,19 +81,16 @@ Page({
   onSceneTap(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { scene: string }>) {
     const sceneId = event.currentTarget.dataset.scene
     if (!sceneId) return
-    if (sceneId === 'travel') {
-      wx.navigateToMiniProgram({
-        appId: 'wx978ff75cdd9fd7f2',
-        path: 'pages/question/question?scene=context&sceneId=travel&category=' + encodeURIComponent('出行问路'),
-        fail: error => {
-          if (error.errMsg && error.errMsg.includes('cancel')) return
-          console.warn('语境填空小程序打开失败', error)
-          wx.showToast({ title: '语境填空打开失败，请稍后重试', icon: 'none' })
-        },
-      })
-      return
-    }
-    wx.navigateTo({ url: `/pages/context-question/context-question?sceneId=${encodeURIComponent(sceneId)}`, fail: () => wx.showToast({ title: '答题页面打开失败', icon: 'none' }) })
+    const scene = this.data.scenes.find(item => item.id === sceneId)
+    if (!scene) return
+    wx.navigateToMiniProgram({
+      appId: 'wx978ff75cdd9fd7f2',
+      path: `pages/question/question?scene=context&sceneId=${encodeURIComponent(scene.id)}&category=${encodeURIComponent(scene.scene)}`,
+      fail: error => {
+        if (error.errMsg && error.errMsg.includes('cancel')) return
+        wx.showToast({ title: '语境填空打开失败，请稍后重试', icon: 'none' })
+      },
+    })
   },
 
   onSceneRetry() {
