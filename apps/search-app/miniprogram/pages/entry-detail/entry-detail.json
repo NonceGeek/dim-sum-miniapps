@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "表达详情",
+  "usingComponents": {
+    "t-icon": "/miniprogram_npm/tdesign-miniprogram/icon/icon",
+    "native-model": "/components/native-model/index",
+    "app-tab-bar": "/custom-tab-bar/index",
+    "common-dialog": "@dim-sum/common-dialog/dialog/index"
+  }
+}

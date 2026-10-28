@@ -1,8 +1,19 @@
+import { fetchEntry } from '../../utils/search-v2'
+import { invalidateDailyEntry, loadDailyEntry } from '../../utils/daily-entry'
+import { readSearchHistory, saveSearchHistory } from '../../utils/search-history'
 import { applyAppearance } from '../../utils/appearance'
 import { loadRandomContextScenes, type ContextScene } from '../../utils/context-scenes'
 Page({
   data: {
+    isLoggedIn: false,
     keyword: '',
+    daily: null as { id: string; expression: string; phonetic: string; meaning: string; note: string; audio: string } | null,
+    dailyTags: [] as string[],
+    dailyLoading: true,
+    dailyError: '',
+    dailyPlaying: false,
+    dailyLabel: '今日一句',
+    dailyUnavailable: false,
     history: [] as { word: string; phonetic: string }[],
     scenes: [] as ContextScene[],
     sceneError: '',
@@ -12,8 +23,11 @@ Page({
 
   onShow() {
     applyAppearance(this)
+    this.setData({ isLoggedIn: !!getApp<IAppOption>().globalData.userInfo })
     this.loadHistory()
     this.loadScenes()
+    this.loadDaily()
+    this.startDailyChecks()
     const tabBar = this.getTabBar()
     if (tabBar) {
       tabBar.setData({ value: '/pages/index/index' })
@@ -38,15 +52,13 @@ Page({
   doSearch(word: string) {
     const normalized = word.trim()
 
-    if (!normalized) {
-      wx.showToast({ title: '请输入搜索关键词', icon: 'none' })
+    if (!normalized || normalized.length > 100) {
+      wx.showToast({ title: '请输入 1–100 字符的关键词', icon: 'none' })
       return
     }
 
-    const phonetics: Record<string, string> = { '埋单': 'maai4 daan1', '唔该': 'm4 goi1', '得闲饮茶': 'dak1 haan4 jam2 caa4' }
-    const history = [{ word: normalized, phonetic: phonetics[normalized] || '' }, ...this.data.history.filter(item => item.word !== normalized)].slice(0, 20)
-    this.setData({ keyword: normalized, history })
-    try { wx.setStorageSync('cantonese-search-history', history) } catch (error) { console.warn('History save failed', error) }
+    this.setData({ keyword: normalized })
+    try { this.setData({ history: saveSearchHistory(normalized) }) } catch (error) { console.warn('History save failed', error) }
     wx.navigateTo({
       url: `/pages/search-result/search-result?keyword=${encodeURIComponent(normalized)}`,
       fail: () => wx.showToast({ title: '搜索页面打开失败，请重试', icon: 'none' }),
@@ -67,9 +79,7 @@ Page({
 
   loadHistory() {
     try {
-      const stored: unknown = wx.getStorageSync('cantonese-search-history')
-      const history = Array.isArray(stored) ? stored.filter(item => item && typeof item.word === 'string' && typeof item.phonetic === 'string').slice(0, 20) : []
-      this.setData({ history })
+      this.setData({ history: readSearchHistory() })
     } catch (error) { console.warn('History load failed', error) }
   },
 
@@ -97,8 +107,93 @@ Page({
     this.loadScenes()
   },
 
+  _dailyPending: false,
+  _dailyTimer: null as ReturnType<typeof setInterval> | null,
+  _dailyAudio: null as WechatMiniprogram.InnerAudioContext | null,
+  startDailyChecks() {
+    if (this._dailyTimer) clearInterval(this._dailyTimer)
+    this._dailyTimer = setInterval(() => this.loadDaily(true), 30000)
+  },
+  async loadDaily(backgroundCheck: unknown = false) {
+    if (this._dailyPending) return
+    this._dailyPending = true
+    this.setData({ dailyLoading: !this.data.daily && !this.data.dailyUnavailable })
+    try {
+      const result = await loadDailyEntry(backgroundCheck === true)
+      if (result.error === 'SKIP') return
+      const entry = result.response?.entry
+      const sense = entry?.senses[0]
+      if (this.data.daily?.id !== entry?.id) this.stopDailyAudio()
+      this.setData({ daily: entry ? {
+        id: entry.id, expression: entry.expression,
+        phonetic: sense?.jyutping || '',
+        meaning: sense?.meaning || '',
+        note: sense?.usageNotes || '',
+        audio: sense?.audio || '',
+      } : null, dailyError: result.error, dailyUnavailable: result.unavailable,
+        dailyLabel: result.offline ? `离线内容（${result.response?.date}）` : '今日一句' })
+      if (entry && result.response) this.loadDailyTags(entry.id, result.response.expiresAt, result.offline)
+      else this.setData({ dailyTags: [] })
+    } finally {
+      this._dailyPending = false
+      this.setData({ dailyLoading: false })
+    }
+  },
+  _dailyTagId: '',
+  async loadDailyTags(id: string, expiresAt: string, offline: boolean) {
+    if (this._dailyTagId === id) return
+    this._dailyTagId = id
+    this.setData({ dailyTags: [] })
+    const key = `search-app:daily-entry-tags:${wx.getAccountInfoSync().miniProgram.envVersion}:${id}`
+    try {
+      const saved = wx.getStorageSync(key)
+      if (saved?.expiresAt === expiresAt && Array.isArray(saved.tags)) {
+        this.setData({ dailyTags: saved.tags }); return
+      }
+      if (offline) { this._dailyTagId = ''; return }
+      const detail = await fetchEntry(id)
+      if (this.data.daily?.id !== id) return
+      this.setData({ dailyTags: detail.primaryTags })
+      wx.setStorageSync(key, { expiresAt, tags: detail.primaryTags })
+    } catch (error) {
+      this._dailyTagId = ''
+      if ((error as { statusCode?: number }).statusCode === 404) {
+        invalidateDailyEntry(id)
+        if (this.data.daily?.id === id) this.loadDaily()
+      }
+    }
+  },
+  onDailyTap() {
+    if (this.data.daily) wx.navigateTo({ url: `/pages/entry-detail/entry-detail?id=${encodeURIComponent(this.data.daily.id)}` })
+  },
+  stopDailyAudio() {
+    if (this._dailyAudio) this._dailyAudio.stop()
+    this.setData({ dailyPlaying: false })
+  },
+  onHide() { this.stopDailyAudio(); if (this._dailyTimer) clearInterval(this._dailyTimer); this._dailyTimer = null },
+  onUnload() {
+    if (this._dailyTimer) clearInterval(this._dailyTimer)
+    if (this._dailyAudio) this._dailyAudio.destroy()
+    this._dailyAudio = null
+  },
   onDailyAudioTap() {
-    wx.showToast({ title: '暂未接入该词条的粤语录音', icon: 'none' })
+    const url = this.data.daily?.audio
+    if (!url) return
+    if (this.data.dailyPlaying) { this.stopDailyAudio(); return }
+    if (!this._dailyAudio) {
+      const audio = wx.createInnerAudioContext()
+      audio.onPlay(() => this.setData({ dailyPlaying: true }))
+      audio.onPause(() => this.setData({ dailyPlaying: false }))
+      audio.onEnded(() => this.setData({ dailyPlaying: false }))
+      audio.onStop(() => this.setData({ dailyPlaying: false }))
+      audio.onError(() => {
+        this.setData({ dailyPlaying: false })
+        wx.showToast({ title: '音频播放失败，请重试', icon: 'none' })
+      })
+      this._dailyAudio = audio
+    }
+    if (this._dailyAudio.src !== url) this._dailyAudio.src = url
+    this._dailyAudio.play()
   },
 })
 

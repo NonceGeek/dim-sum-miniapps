@@ -1,0 +1,6 @@
+<view class="history-page ds-page" style="{{appearanceStyle}}">
+  <view wx:if="{{authorized && history.length}}" class="history-queries"><view wx:for="{{history}}" wx:key="word" class="history-query" data-word="{{item.word}}" bindtap="onQueryTap"><text class="history-query-word">{{item.word}}</text><view class="history-query-close" role="button" aria-label="删除{{item.word}}" data-word="{{item.word}}" catchtap="onRemoveQuery">×</view></view></view>
+  <text wx:elif="{{authorized}}" class="history-empty">还没有查询记录</text>
+  <view wx:if="{{authorized && history.length}}" class="history-bottom"><button class="history-clear" hover-class="none" bindtap="onClearHistory">清空浏览记录</button></view>
+  <common-dialog id="common-dialog" theme="{{appearanceTheme}}" theme-style="{{dialogTheme}}" />
+</view>

@@ -2,6 +2,7 @@
   "usingComponents": {
     "t-icon": "/miniprogram_npm/tdesign-miniprogram/icon/icon",
     "t-button": "/miniprogram_npm/tdesign-miniprogram/button/button",
-    "common-dialog": "@dim-sum/common-dialog/dialog/index"
+    "common-dialog": "@dim-sum/common-dialog/dialog/index",
+    "t-action-sheet": "/miniprogram_npm/tdesign-miniprogram/action-sheet/action-sheet"
   }
 }

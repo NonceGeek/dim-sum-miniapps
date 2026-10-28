@@ -33,8 +33,12 @@ function createHttpClient(config) {
   function readResponse(response) {
     if (response.statusCode >= 200 && response.statusCode < 300) return response.data;
     const body = response.data;
-    const message = body && typeof body.error === 'string' ? body.error : '请求失败，请稍后重试';
-    throw requestError(response.statusCode === 401 ? 'AUTH_REQUIRED' : 'HTTP_ERROR', message, response.statusCode, body);
+    const apiError = body && body.error;
+    const message = typeof apiError === 'string' ? apiError : apiError && typeof apiError.message === 'string' ? apiError.message : '请求失败，请稍后重试';
+    const code = response.statusCode === 401 ? 'AUTH_REQUIRED' : apiError && typeof apiError.code === 'string' ? apiError.code : 'HTTP_ERROR';
+    const error = requestError(code, message, response.statusCode, body);
+    error.responseHeaders = response.header || {};
+    throw error;
   }
   async function request(path, options = {}) {
     const url = resolveUrl(path);

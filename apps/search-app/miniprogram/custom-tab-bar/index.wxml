@@ -1,10 +1,10 @@
 <t-tab-bar
   wx:if="{{!hidden}}"
-  style="{{appearanceStyle}}"
+  style="{{appearanceStyle}};--td-tab-bar-bg-color:var(--ds-bg);--td-tab-bar-color:var(--ds-text-variant);--td-tab-bar-active-color:var(--ds-primary);--td-tab-bar-active-bg:transparent;"
   t-class="stitch-tabbar"
   value="{{value}}"
   theme="tag"
-  fixed
+  fixed="{{fixed}}"
   safe-area-inset-bottom
   split="{{false}}"
   bindchange="onChange"

@@ -1,15 +1,27 @@
-<view style="{{appearanceStyle}}" class="page ds-page">
+<view style="{{appearanceStyle}}" class="page ds-page {{appearanceTheme === 'dark' ? 'home-dark' : ''}}">
   <scroll-view class="home-scroll" scroll-y enhanced show-scrollbar="{{false}}">
     <view class="home-content">
       <view class="brand"><text class="brand__title">粤语随手查</text><text class="brand__subtitle">CANTONESE, EVERY DAY</text></view>
-      <view class="search-glow"><view class="search-shell"><t-icon name="search" size="34rpx" color="var(--ds-outline)" /><input class="search-native" value="{{keyword}}" placeholder="输入汉字、粤拼或日常短句..." placeholder-class="search-placeholder" bindinput="onSearchChange" bindconfirm="onSearchSubmit" confirm-type="search" /><button class="search-submit" bindtap="onSearchSubmit">搜索</button></view></view>
-      <view class="history-head"><view class="section-title section-title--small"><t-icon name="history" size="30rpx" color="var(--ds-outline)" /><text>最近查过</text></view><button class="clear-history" bindtap="onClearHistory">清空</button></view>
-      <scroll-view class="history-scroll" scroll-x show-scrollbar="{{false}}"><view class="history-list"><button wx:for="{{history}}" wx:key="word" class="history-chip" data-word="{{item.word}}" bindtap="onHotWordTap"><text>{{item.word}}</text><text wx:if="{{item.phonetic}}" class="history-phonetic">{{item.phonetic}}</text></button><text wx:if="{{!history.length}}" class="history-empty">还没有查询记录，试试「唔该」</text></view></scroll-view>
+      <view class="search-glow {{!keyword ? 'search-glow--idle' : ''}}"><view class="search-shell"><t-icon name="search" size="34rpx" color="var(--ds-outline)" /><input class="search-native" value="{{keyword}}" placeholder="输入汉字、粤拼或日常短句..." placeholder-class="search-placeholder" bindinput="onSearchChange" bindconfirm="onSearchSubmit" confirm-type="search" /><button class="search-submit" bindtap="onSearchSubmit">搜索</button></view></view>
+      <view wx:if="{{isLoggedIn}}" class="history-head"><view class="section-title section-title--small"><t-icon name="history" size="30rpx" color="var(--ds-outline)" /><text>最近查过</text></view><button class="clear-history" bindtap="onClearHistory">清空</button></view>
+      <scroll-view wx:if="{{isLoggedIn}}" class="history-scroll" scroll-x show-scrollbar="{{false}}"><view class="history-list"><button wx:for="{{history}}" wx:key="word" class="history-chip" data-word="{{item.word}}" bindtap="onHotWordTap"><text>{{item.word}}</text><text wx:if="{{item.phonetic}}" class="history-phonetic">{{item.phonetic}}</text></button><text wx:if="{{!history.length}}" class="history-empty">还没有查询记录，试试「唔该」</text></view></scroll-view>
       <view class="section-title scenes-title"><t-icon name="compass" size="34rpx" color="var(--ds-home-blue)" /><text>常用场景</text></view>
       <view wx:if="{{scenesLoading}}" class="scenes" aria-label="场景加载中"><view wx:for="{{scenePlaceholders}}" wx:key="*this" class="scene-card scene-skeleton"><view class="scene-icon scene-skeleton__block"></view><view class="scene-skeleton__label scene-skeleton__block"></view></view></view>
       <view wx:else class="scenes"><button wx:for="{{scenes}}" wx:key="id" class="scene-card" data-scene="{{item.id}}" bindtap="onSceneTap"><view class="scene-icon scene-icon--{{item.tone}}"><t-icon name="{{item.icon}}" size="36rpx" /></view><text>{{item.scene}}</text></button></view>
       <button wx:if="{{sceneError}}" class="scene-empty" bindtap="onSceneRetry">{{sceneError}} · 点击继续</button>
-      <view class="daily-card"><view class="daily-heading"><view class="daily-mark"></view><text>今日一句</text><text class="daily-badge">高频俗语</text></view><view class="daily-main"><view><text class="daily-phonetic">dak1 haan4 jam2 caa4</text><text class="daily-word">得闲饮茶</text></view><button class="audio-button" aria-label="播放得闲饮茶发音" bindtap="onDailyAudioTap"><t-icon name="sound" size="48rpx" /></button></view><view class="daily-meaning"><view class="meaning-dot"></view><text>有空一起喝茶。</text></view><view class="daily-footer"><text class="daily-note">常用于邀约或道别时的客套话</text></view></view>
+      <view class="daily-card" bindtap="onDailyTap">
+        <view class="daily-heading"><view class="daily-mark"></view><text>{{dailyLabel}}</text></view>
+        <view wx:if="{{dailyLoading}}" class="daily-loading scene-skeleton"><view class="daily-skeleton-line scene-skeleton__block"></view><view class="daily-skeleton-line daily-skeleton-line--short scene-skeleton__block"></view></view>
+        <block wx:elif="{{daily}}">
+          <view wx:if="{{dailyTags.length}}" class="daily-tags"><text wx:for="{{dailyTags}}" wx:key="*this" class="daily-badge">{{item}}</text></view>
+          <view class="daily-main"><view><text class="daily-word">{{daily.expression}}</text><text wx:if="{{daily.phonetic}}" class="daily-phonetic">{{daily.phonetic}}</text></view><button wx:if="{{daily.audio}}" class="audio-button" aria-label="{{dailyPlaying ? '停止播放' : '播放今日一句'}}" catchtap="onDailyAudioTap"><t-icon name="{{dailyPlaying ? 'stop' : 'sound'}}" size="48rpx" /></button></view>
+          <view wx:if="{{daily.meaning}}" class="daily-meaning"><view class="meaning-dot"></view><text>{{daily.meaning}}</text></view>
+          <view wx:if="{{daily.note}}" class="daily-footer"><text class="daily-note">{{daily.note}}</text></view>
+          <button class="daily-usage" catchtap="onDailyTap"><text>看看怎么用</text><t-icon name="arrow-right" size="28rpx" /></button>
+        </block>
+        <text wx:if="{{dailyUnavailable}}" class="daily-note">今日内容已下架，请明日再来</text>
+        <button wx:if="{{dailyError}}" class="daily-retry" catchtap="loadDaily">{{dailyError}} · 重试</button>
+      </view>
     </view>
   </scroll-view>
 </view>

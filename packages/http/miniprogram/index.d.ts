@@ -8,7 +8,7 @@ export interface RequestOptions {
   auth?: RequestAuth
   promptLogin?: boolean
 }
-export interface HttpError extends Error { code: string; error: string; statusCode?: number; data?: unknown }
+export interface HttpError extends Error { code: string; error: string; statusCode?: number; data?: unknown; responseHeaders?: Record<string, string> }
 export interface HttpAuthClient {
   getAccessToken(): string
   getSessionVersion(): number

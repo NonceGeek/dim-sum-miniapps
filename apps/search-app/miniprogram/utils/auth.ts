@@ -10,7 +10,7 @@ export const auth = createAuthClient({
 let prompting = false
 
 // UI 策略属于当前 app；公共鉴权/请求包不强制页面跳转。
-export function promptLogin(host?: WechatMiniprogram.Page.Instance<any, any>) {
+export function promptLogin(host?: WechatMiniprogram.Page.Instance<any, any>, onAuthenticated?: () => void) {
   const pages = getCurrentPages()
   const page = host || pages[pages.length - 1]
   if (prompting || page?.route === 'pages/login/login') return
@@ -21,15 +21,15 @@ export function promptLogin(host?: WechatMiniprogram.Page.Instance<any, any>) {
   prompting = true
   showCommonDialog(page, {
     title: '登录后继续', content: '登录后可以使用该功能。', confirmText: '去登录', showCancel: true,
-    onConfirm: () => wx.navigateTo({ url: '/pages/login/login?returnToPrevious=1', fail: () => wx.showToast({ title: '登录页面打开失败', icon: 'none' }) }),
+    onConfirm: () => wx.navigateTo({ url: '/pages/login/login?returnToPrevious=1', events: { loginSuccess: () => onAuthenticated?.() }, fail: () => wx.showToast({ title: '登录页面打开失败', icon: 'none' }) }),
     onComplete: () => { prompting = false },
   })
 }
 
-export async function requireLogin(host: WechatMiniprogram.Page.Instance<any, any>): Promise<boolean> {
+export async function requireLogin(host: WechatMiniprogram.Page.Instance<any, any>, onAuthenticated?: () => void): Promise<boolean> {
   try { await auth.ensureLogin(); return true }
   catch (error) {
-    if (isAuthRequired(error)) promptLogin(host)
+    if (isAuthRequired(error)) promptLogin(host, onAuthenticated)
     else wx.showToast({ title: error instanceof Error ? error.message : '登录状态检查失败', icon: 'none' })
     return false
   }

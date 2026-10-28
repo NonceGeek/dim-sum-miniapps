@@ -15,6 +15,7 @@ function getLoginErrorMessage(error: any, fallback: string): string {
 
 Page({
   data: {
+    returnToPrevious: false,
     loading: false,
     redirectUrl: "/pages/profile/profile",
     currentTheme: "light",
@@ -29,7 +30,8 @@ Page({
     version: miniProgram.version || `${ENV.VERSION}`,
   },
 
-  onLoad(options: { redirect?: string }) {
+  onLoad(options: { redirect?: string; returnToPrevious?: string }) {
+    this.setData({ returnToPrevious: options.returnToPrevious === '1' });
     try {
       const redirect = decodeURIComponent(options.redirect || '');
       if (redirect === '/pages/profile/profile' || redirect === '/pages/index/index') this.setData({ redirectUrl: redirect });
@@ -83,6 +85,11 @@ Page({
   },
 
   finishLogin() {
+    if (this.data.returnToPrevious && getCurrentPages().length > 1) {
+      this.getOpenerEventChannel().emit('loginSuccess');
+      wx.navigateBack({ fail: () => wx.switchTab({ url: this.data.redirectUrl }) });
+      return;
+    }
     wx.switchTab({ url: this.data.redirectUrl, fail: () => wx.showToast({ title: '页面打开失败，请重试', icon: 'none' }) });
   },
   onCancelLogin() {

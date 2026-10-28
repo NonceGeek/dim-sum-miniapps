@@ -5,6 +5,8 @@ const tabs = [
 
 Component({
   properties: {
+    appearanceStyle: { type: String, value: '' },
+    fixed: { type: Boolean, value: true },
     navigateOnActive: { type: Boolean, value: false },
   },
   data: {

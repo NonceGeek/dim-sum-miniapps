@@ -1,3 +1,4 @@
+import { invalidateDailyEntry } from '../../utils/daily-entry'
 import { applyAppearance } from '../../utils/appearance'
 import { showCommonDialog } from '@dim-sum/common-dialog'
 import { requireLogin } from '../../utils/auth'
@@ -15,7 +16,7 @@ const feedbackErrors: Record<string, string> = {
   SERVICE_UNAVAILABLE: '服务暂不可用，请稍后重试',
 }
 Page({
-  data: { isLoggedIn: false, displayName: '游客', avatarText: '点', avatarUrl: '', version: '1.0.0', historyCount: 0, activePopup: '', feedbackTypes: ['内容有误', '发音问题', '功能建议', '其他问题'], feedbackTypeIndex: 0, feedbackText: '', feedbackSubmitting: false, feedbackRequestId: '', feedbackSignature: '', menuItems: [
+  data: { themeSheetVisible: false, themeOptions: [] as { label: string; value: string; color: string }[], isLoggedIn: false, displayName: '游客', avatarText: '点', avatarUrl: '', version: '1.0.0', historyCount: 0, activePopup: '', feedbackTypes: ['内容有误', '发音问题', '功能建议', '其他问题'], feedbackTypeIndex: 0, feedbackText: '', feedbackSubmitting: false, feedbackRequestId: '', feedbackSignature: '', menuItems: [
     { key: 'history', icon: 'history', title: '最近查询', hint: '' },
     { key: 'appearance', icon: 'sunny', title: '外观模式', hint: '' },
     { key: 'feedback', icon: 'service', title: '问题反馈', hint: '欢迎提建议' },
@@ -56,19 +57,27 @@ Page({
   async onMenuTap(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { key: string }>) {
     const key = event.currentTarget.dataset.key
     if (key === 'appearance') {
-      wx.showActionSheet({ itemList: ['跟随系统', '浅色', '深色'], success: res => {
-        try { wx.setStorageSync('cantonese-appearance', ['system', 'light', 'dark'][res.tapIndex]); applyAppearance(this) }
-        catch (error) { wx.showToast({ title: '保存失败，请重试', icon: 'none' }) }
-      }, fail: () => {} }); return
+      let mode = 'system'
+      try { mode = wx.getStorageSync('cantonese-appearance') || 'system' } catch (_) {}
+      const dark = getApp<IAppOption>().globalData.theme === 'dark'
+      this.setData({ themeSheetVisible: true, themeOptions: [
+        { label: '跟随系统', value: 'system' }, { label: '浅色', value: 'light' }, { label: '深色', value: 'dark' },
+      ].map(item => ({ ...item, color: item.value === mode ? (dark ? '#80b5ff' : '#0068ff') : (dark ? '#f0f6fc' : '#1b1c1c') })) })
+      return
     }
-    if (key === 'feedback' && !await requireLogin(this)) return
+    if ((key === 'feedback' || key === 'history') && !await requireLogin(this)) return
     if (key === 'about' || key === 'feedback') { this.setData({ activePopup: key }); const bar = this.getTabBar(); if (bar) bar.setData({ hidden: true }); return }
+    if (key === 'history') wx.navigateTo({ url: '/pages/search-history/search-history', fail: () => wx.showToast({ title: '页面打开失败', icon: 'none' }) })
+  },
+  onThemeSheetClose() { this.setData({ themeSheetVisible: false }) },
+  onThemeSelect(event: WechatMiniprogram.CustomEvent<{ selected: { value: string } }>) {
+    const mode = event.detail.selected.value
+    if (!['system', 'light', 'dark'].includes(mode)) return
     try {
-      const stored = wx.getStorageSync('cantonese-search-history')
-      const words = Array.isArray(stored) ? stored.filter(item => item && typeof item.word === 'string').map(item => item.word) : []
-      if (!words.length) { wx.showToast({ title: '还没有查询记录', icon: 'none' }); return }
-      wx.showActionSheet({ itemList: words.slice(0, 6), success: res => wx.navigateTo({ url: '/pages/search-result/search-result?keyword=' + encodeURIComponent(words[res.tapIndex]), fail: () => wx.showToast({ title: '页面打开失败', icon: 'none' }) }), fail: () => {} })
-    } catch (error) { wx.showToast({ title: '读取失败，请重试', icon: 'none' }) }
+      wx.setStorageSync('cantonese-appearance', mode)
+      applyAppearance(this)
+      this.setData({ themeSheetVisible: false })
+    } catch (_) { wx.showToast({ title: '保存失败，请重试', icon: 'none' }) }
   },
   closePopup() { if (this.data.feedbackSubmitting) return; this.setData({ activePopup: '' }); const bar = this.getTabBar(); if (bar) bar.setData({ hidden: false }) },
   onPopupContentTap() {},
@@ -108,8 +117,9 @@ Page({
       const bar = this.getTabBar(); if (bar) bar.setData({ hidden: false })
       wx.showToast({ title: '反馈已提交', icon: 'success' })
     } catch (error) {
-      const failure = error as { data?: { error?: string; code?: string }; statusCode?: number }
-      const code = failure.data?.error || failure.data?.code || ''
+      const failure = error as { data?: { error?: string | { code?: string; message?: string }; code?: string }; statusCode?: number }
+      const apiError = failure.data?.error
+      const code = (typeof apiError === 'string' ? apiError : apiError?.code) || failure.data?.code || ''
       const title = feedbackErrors[code] || (failure.statusCode === 429 ? feedbackErrors.RATE_LIMITED : '提交失败，请重试')
       wx.showToast({ title, icon: 'none' })
     } finally {
@@ -117,8 +127,8 @@ Page({
     }
   },
   onClearCache() {
-    showCommonDialog(this, { title: '清理临时缓存？', content: '仅清理临时检索缓存，保留收藏、查询记录和本地反馈。', showCancel: true, onConfirm: () => {
-      try { wx.removeStorageSync('cantonese-search-cache'); wx.showToast({ title: '临时缓存已清理', icon: 'none' }) }
+    showCommonDialog(this, { title: '清理临时缓存？', content: '仅清理临时检索缓存，保留查询记录。', showCancel: true, onConfirm: () => {
+      try { wx.removeStorageSync('cantonese-search-cache'); invalidateDailyEntry(); wx.showToast({ title: '临时缓存已清理', icon: 'none' }) }
       catch (error) { wx.showToast({ title: '清理失败，请重试', icon: 'none' }) }
     } })
   },

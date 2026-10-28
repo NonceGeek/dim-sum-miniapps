@@ -1,0 +1,9 @@
+<view class="model-container">
+  <view class="model-preview" style="height: {{height}}rpx;">
+    <model-scene id="native-scene" wx:if="{{active}}" disable-scroll source="{{source}}" background="{{dark ? '0.11 0.13 0.17 1' : '0.96 0.97 0.99 1'}}" width="{{renderWidth}}" height="{{renderHeight}}" style="position:fixed;left:{{displayLeft}}px;top:{{displayTop}}px;display:block;width:{{displayWidth}}px;height:{{displayHeight}}px;" bind:loaded="onLoaded" bind:failure="onFailure" />
+    <view wx:if="{{error}}" class="model-status"><t-icon name="cube" size="48rpx" /><text>{{error}}</text><button wx:if="{{source}}" bindtap="onRetry">重新加载</button></view>
+    <view wx:elif="{{loading && active}}" class="model-status model-status--loading"><t-icon name="loading" size="40rpx" /><text>正在加载 3D 模型…</text></view>
+    <view wx:elif="{{!active}}" class="model-status model-status--idle"><t-icon name="cube" size="48rpx" /><text>完整显示模型区域后可旋转查看</text></view>
+  </view>
+  <view class="model-toolbar"><text>拖动旋转 · 双指缩放</text><button wx:if="{{expandable}}" bindtap="onExpand">放大查看</button><button wx:if="{{!loading && !error}}" bindtap="onRetry">重置视角</button></view>
+</view>

@@ -4,7 +4,10 @@
     "pages/profile/profile",
     "pages/search-result/search-result",
     "pages/login/login",
-    "pages/webview/webview"
+    "pages/webview/webview",
+    "pages/entry-detail/entry-detail",
+    "pages/model-viewer/model-viewer",
+    "pages/search-history/search-history"
   ],
   "window": {
     "navigationBarTextStyle": "@navTxtStyle",

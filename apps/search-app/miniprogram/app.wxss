@@ -204,7 +204,7 @@ page {
   min-width: 0;
   height: 64rpx;
   color: var(--ds-text);
-  font-size: 24rpx;
+  font-size: 28rpx;
 }
 .search-placeholder {
   color: var(--ds-home-placeholder);
@@ -230,3 +230,10 @@ page {
   width: 112rpx;
   flex: 0 0 112rpx;
 }
+
+/* Idle search border follows the theme with blue and cyan highlights. */
+.search-glow--idle{position:relative;overflow:hidden;isolation:isolate}
+.search-glow--idle::before{content:'';position:absolute;left:50%;top:50%;width:1200rpx;height:1200rpx;background:conic-gradient(from 0deg,transparent 0deg,var(--ds-home-search-border) 60deg,var(--ds-primary) 105deg,var(--ds-accent) 135deg,var(--ds-secondary-container) 145deg,transparent 175deg,transparent 240deg,var(--ds-primary) 285deg,var(--ds-accent) 315deg,transparent 350deg);transform:translate(-50%,-50%) rotate(0deg);animation:search-theme-orbit 6s linear infinite;pointer-events:none}
+.search-glow--idle .search-shell{position:relative;z-index:1}
+@keyframes search-theme-orbit{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.search-glow--idle::before{animation:none}}

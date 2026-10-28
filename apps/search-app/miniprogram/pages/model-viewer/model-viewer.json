@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "3D 模型",
+  "usingComponents": {
+    "native-model": "/components/native-model/index"
+  }
+}

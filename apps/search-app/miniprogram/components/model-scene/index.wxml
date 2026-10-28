@@ -1,0 +1,15 @@
+<xr-scene id="scene" bind:ready="onSceneReady">
+  <xr-assets bind:loaded="onAssetsLoaded" bind:error="onAssetError">
+    <xr-asset-load wx:if="{{assetSource}}" type="gltf" asset-id="content-model" src="{{assetSource}}" />
+  </xr-assets>
+  <xr-node>
+    <xr-node id="target" node-id="camera-target" position="0 0 0" />
+    <xr-gltf wx:if="{{loaded}}" id="model" node-id="content-model-node" model="content-model" position="{{modelPosition}}" scale="{{modelScale}}" bind:gltf-loaded="onModelLoaded" />
+    <xr-camera id="camera" node-id="camera" position="0 0.6 4" target="camera-target" clear-color="{{clearColor}}" background="default" camera-orbit-control="" near="0.01" far="1000" />
+  </xr-node>
+  <xr-node>
+    <xr-light type="ambient" color="1 1 1" intensity="0.8" />
+    <xr-light type="directional" rotation="35 30 0" color="1 1 1" intensity="2" />
+    <xr-light type="directional" rotation="-30 -140 0" color="1 1 1" intensity="0.6" />
+  </xr-node>
+</xr-scene>

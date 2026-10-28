@@ -126,3 +126,8 @@ test('cross-origin URLs are rejected before any credentials can be sent', async 
   await assert.rejects(client(f)('https://other.test/private'), { code: 'INVALID_URL' });
   assert.equal(f.requests.length, 0);
 });
+
+test('structured business errors preserve code, message and response date', async () => {
+  const f = fixture(() => ({ statusCode: 404, header: { Date: 'Wed, 28 Oct 2026 04:00:00 GMT' }, data: { error: { code: 'DAILY_ENTRY_UNAVAILABLE', message: '今日内容已下架' } } }));
+  await assert.rejects(client(f)('/daily', { auth: false }), error => error.code === 'DAILY_ENTRY_UNAVAILABLE' && error.message === '今日内容已下架' && !!error.responseHeaders.Date);
+});

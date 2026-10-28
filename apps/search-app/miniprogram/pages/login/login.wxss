@@ -262,3 +262,9 @@
 .phone-login-popup {
   --td-countdown-default-color: var(--ds-text-variant);
 }
+
+.login-box .guest-login-btn{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100%!important;height:100rpx!important;min-height:100rpx;margin:24rpx 0 0;padding:0 24rpx;border-radius:var(--ds-dialog-pill);font-size:32rpx;font-weight:600;line-height:normal}
+
+.login-box > .login-btn,.login-box > .guest-login-btn{margin:0!important}.login-box > .login-btn + .login-btn,.login-box > .login-btn + .guest-login-btn{margin-top:24rpx!important}
+
+.send-code-btn{--td-button-primary-outline-color:var(--ds-primary);--td-button-primary-outline-border-color:var(--ds-primary);--td-button-primary-outline-active-bg-color:var(--ds-primary-10);--td-button-primary-outline-disabled-color:var(--ds-outline);--td-button-primary-disabled-bg:var(--ds-surface-low);--td-button-primary-disabled-border-color:var(--ds-border);--td-button-primary-disabled-color:var(--ds-outline);--td-button-default-disabled-bg:var(--ds-surface-low);--td-button-default-disabled-color:var(--ds-outline);--td-countdown-default-color:var(--ds-outline)}

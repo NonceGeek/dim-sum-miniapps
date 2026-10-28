@@ -1,0 +1,4 @@
+.model-state { min-height: 100vh; padding: 100rpx 40rpx; text-align: center; color: var(--ds-text-secondary); font-size: 28rpx; line-height: 44rpx; }
+.model-state button { width: auto; margin: 28rpx auto 0; padding: 20rpx 32rpx; border-radius: 40rpx; background: var(--ds-home-blue-soft); color: var(--ds-primary); font-size: 28rpx; }
+
+.model-page { min-height: 100vh; padding: 24rpx; }

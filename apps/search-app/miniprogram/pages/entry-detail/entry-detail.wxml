@@ -1,0 +1,62 @@
+<view class="detail-page ds-page" style="{{appearanceStyle}};padding-bottom:{{detailBottomSpace}}px;">
+  <view wx:if="{{loading}}" class="detail-state">正在加载表达…</view>
+  <view wx:elif="{{error}}" class="detail-state"><text>{{error}}</text><button class="detail-retry" bindtap="{{unavailable ? 'onReturn' : 'loadEntry'}}">{{unavailable ? '返回搜索' : '重新加载'}}</button></view>
+  <block wx:elif="{{entry}}">
+    <view wx:if="{{entry.primaryTags.length}}" class="detail-tag-list"><text wx:for="{{entry.primaryTags}}" wx:key="*this" class="detail-eyebrow">{{item}}</text></view>
+    <view class="detail-heading"><text class="detail-word">{{entry.expression}}</text><button wx:if="{{detailContent.heroAudio}}" class="detail-play" size="mini" data-url="{{detailContent.heroAudio}}" bindtap="onPlayAudio" aria-label="播放表达"><t-icon name="{{playingUrl === detailContent.heroAudio ? 'pause' : 'play'}}" size="36rpx" /></button></view>
+    <view wx:if="{{detailContent.topJyutping}}" class="detail-reading"><text class="detail-phonetic">{{detailContent.topJyutping}}</text></view>
+    <view wx:if="{{detailContent.topMeaning}}" class="detail-section"><text class="detail-title">解释</text><text class="detail-body">{{detailContent.topMeaning}}</text></view>
+    <view wx:if="{{detailContent.topUsage}}" class="detail-section"><text class="detail-title">用法说明</text><text class="detail-body">{{detailContent.topUsage}}</text></view>
+    <view wx:for="{{detailContent.sections}}" wx:for-item="section" wx:for-index="sectionIndex" wx:key="sectionIndex" class="structured-section {{sectionIndex === 0 ? 'structured-section--first' : ''}}">
+      <view wx:if="{{section.jyutping || section.audio}}" class="section-pronunciation"><view class="section-pronunciation__main"><text wx:if="{{detailContent.sections.length > 1}}" class="section-pronunciation__label">读音 {{sectionIndex + 1}}</text><text wx:if="{{section.jyutping}}" class="detail-phonetic">{{section.jyutping}}</text></view><button wx:if="{{section.audio && section.audio !== detailContent.heroAudio}}" class="example-play" size="mini" data-url="{{section.audio}}" bindtap="onPlayAudio" aria-label="播放读音"><t-icon name="{{playingUrl === section.audio ? 'pause' : 'play'}}" size="36rpx" /></button></view>
+      <view wx:for="{{section.blocks}}" wx:for-item="block" wx:for-index="blockIndex" wx:key="blockIndex" class="structured-block {{!block.showLabel ? 'structured-block--continuation' : ''}}">
+        <text wx:if="{{block.showLabel}}" class="structured-block__label">{{block.label}}</text>
+        <text wx:if="{{block.text}}" class="detail-body structured-block__text">{{block.text}}</text>
+        <button wx:if="{{block.type === 'audio' && block.url}}" class="block-audio" size="mini" data-url="{{block.url}}" bindtap="onPlayAudio"><t-icon name="{{playingUrl === block.url ? 'pause' : 'play'}}" size="36rpx" /><text>{{playingUrl === block.url ? '暂停播放' : '播放音频'}}</text></button>
+        <video wx:if="{{block.type === 'video' && block.url}}" class="detail-video" src="{{block.url}}" controls binderror="onVideoError" />
+        <image wx:if="{{block.type === 'image' && block.url}}" class="detail-image" src="{{block.url}}" mode="widthFix" data-url="{{block.url}}" bindtap="onPreviewImage" />
+        <native-model wx:if="{{(block.type === 'model3d' || block.type === 'voxel') && block.url}}" scroll-offset="{{modelScrollOffset}}" viewport-top="{{modelViewportTop}}" viewport-bottom="{{modelViewportBottom}}" data-url="{{block.url}}" bindexpand="onOpenModel" src="{{block.url}}" dark="{{appearanceTheme === 'dark'}}" />
+        <view wx:if="{{block.type === 'example'}}" wx:for="{{block.examples}}" wx:for-item="example" wx:for-index="exampleIndex" wx:key="exampleIndex" class="example-card"><view class="example-heading"><text class="example-text">{{example.text}}</text><button wx:if="{{example.audioUrl}}" class="example-play" size="mini" data-url="{{example.audioUrl}}" bindtap="onPlayAudio" aria-label="播放例句"><t-icon name="{{playingUrl === example.audioUrl ? 'pause' : 'play'}}" size="36rpx" /></button></view><text wx:if="{{example.jyutping}}" class="example-phonetic">{{example.jyutping}}</text><text wx:if="{{example.translation}}" class="detail-body">{{example.translation}}</text></view>
+      </view>
+    </view>
+    <video binderror="onVideoError" wx:if="{{detailContent.topVideo}}" class="detail-video" src="{{detailContent.topVideo}}" poster="{{entry.assets.coverImage}}" controls />
+    <image wx:elif="{{detailContent.topImage}}" class="detail-image" src="{{entry.assets.coverImage}}" mode="widthFix" data-url="{{entry.assets.coverImage}}" bindtap="onPreviewImage" />
+    <text wx:if="{{entry.assets.videoTranscript}}" class="detail-body media-transcript">{{entry.assets.videoTranscript}}</text>
+    <view wx:if="{{detailContent.topModel}}" class="detail-native-model"><native-model scroll-offset="{{modelScrollOffset}}" viewport-top="{{modelViewportTop}}" viewport-bottom="{{modelViewportBottom}}" data-url="{{detailContent.topModel}}" bindexpand="onOpenModel" src="{{detailContent.topModel}}" height="600" dark="{{appearanceTheme === 'dark'}}" /></view>
+    <view class="detail-attribution"><text class="detail-attribution-label">语料来源</text><text class="detail-attribution-name">{{entry.source.datasetName}}</text></view>
+    <view wx:if="{{entry.source.licenses.length}}" class="detail-licenses"><text wx:for="{{entry.source.licenses}}" wx:key="*this">{{item}}</text></view>
+    <view wx:if="{{showLearning}}" class="detail-actions">
+      <button wx:if="{{showLearning}}" class="learn-action" hover-class="action--pressed" bindtap="onLearnTap"><view class="learn-action__label"><t-icon name="star" size="30rpx" /><text>{{practiceCompleted ? '再练一次' : '学会这句'}}</text></view><t-icon name="{{learnExpanded ? 'chevron-up' : 'arrow-up'}}" size="30rpx" /></button>
+      <view wx:if="{{showLearning && learnExpanded}}" class="practice-panel">
+        <text class="practice-title">{{entry.expression}}</text>
+        <text class="practice-instruction">{{practiceAudio ? '先听一遍，再跟读这句表达。' : '先读一遍，再尝试用自己的话复述。'}}</text>
+        <button wx:if="{{practiceAudio}}" class="practice-audio" data-url="{{practiceAudio}}" bindtap="onPlayAudio"><t-icon name="{{playingUrl === practiceAudio ? 'pause' : 'sound'}}" size="36rpx" /><text>{{playingUrl === practiceAudio ? '暂停音频' : '听音跟读'}}</text></button>
+        <block wx:if="{{practiceMeaning}}"><text class="practice-instruction">回想一下，这句表达是什么意思？</text><button class="practice-reveal" bindtap="onRevealMeaning">{{meaningRevealed ? '收起解释' : '查看解释'}}</button><text wx:if="{{meaningRevealed}}" class="practice-meaning">{{practiceMeaning}}</text></block>
+        <button class="practice-complete" bindtap="onPracticeComplete">完成练习</button>
+      </view>
+    </view>
+  </block>
+  <view class="detail-bottom-bar">
+      <view wx:if="{{entry && !loading && !error}}" class="detail-actions__row"><button wx:if="{{false}}" class="detail-secondary-action {{favorited ? 'detail-secondary-action--active' : ''}}" hover-class="action--pressed" bindtap="onFavoriteTap"><t-icon name="{{favorited ? 'star-filled' : 'star'}}" size="30rpx" /><text>{{favorited ? '已收藏' : '收藏'}}</text></button><button class="detail-secondary-action" hover-class="action--pressed" bindtap="onShareTap"><t-icon name="share" size="30rpx" /><text>分享</text></button></view>
+    <app-tab-bar appearance-style="{{appearanceStyle}}" fixed="{{false}}" navigate-on-active="{{true}}" />
+  </view>
+  <view wx:if="{{shareVisible}}" class="share-mask" catchtap="onShareClose" catchtouchmove="onSheetContentTap">
+    <view class="share-sheet" catchtap="onSheetContentTap">
+      <view class="share-handle"></view>
+      <view class="share-heading"><text>分享这句粤语</text><view class="share-close" role="button" aria-label="关闭" bindtap="onShareClose"><t-icon name="close" size="32rpx" /></view></view>
+      <scroll-view class="share-body" scroll-y>
+        <block>
+          <view class="share-preview"><view class="share-preview-header"><text class="share-brand">粤语随手查</text><button class="share-copy" aria-label="复制分享文案" bindtap="onCopyShare"><t-icon name="copy" size="32rpx" /></button></view><text class="share-word">{{entry.expression}}</text><text wx:if="{{entry.jyutping}}" class="share-reading">{{entry.jyutping}}</text><text wx:if="{{entry.meaning}}" class="share-meaning">{{entry.meaning}}</text><text wx:if="{{shareExample}}" class="share-example">{{shareExample}}</text></view>
+        </block>
+
+      </scroll-view>
+      <view class="share-tabs"><button class="share-tab share-tab--active" open-type="share">分享卡片</button><button class="share-tab" bindtap="onOpenFeedback">问题反馈</button></view>
+    </view>
+  </view>
+  <view wx:if="{{feedbackVisible}}" class="share-mask" catchtap="onFeedbackClose">
+    <view class="share-sheet" catchtap="onSheetContentTap"><view class="share-handle"></view><view class="share-heading"><text>问题反馈</text><view class="share-close" role="button" aria-label="关闭" bindtap="onFeedbackClose"><t-icon name="close" size="32rpx" /></view></view><scroll-view class="share-body" scroll-y>
+        <block><text class="share-feedback-label">请选择问题类型</text><view class="feedback-options"><button wx:for="{{feedbackTypes}}" wx:key="*this" class="feedback-option {{feedbackType === index ? 'feedback-option--active' : ''}}" data-index="{{index}}" bindtap="onFeedbackType">{{item}}</button></view><textarea class="share-feedback-input" value="{{feedbackText}}" placeholder="描述问题，最多 300 字" maxlength="300" disabled="{{feedbackSubmitting}}" bindinput="onFeedbackInput" /><button class="share-submit" disabled="{{feedbackSubmitting}}" loading="{{feedbackSubmitting}}" bindtap="onFeedbackSubmit">{{feedbackSubmitting ? '提交中…' : '提交反馈'}}</button></block>
+    </scroll-view></view>
+  </view>
+  <common-dialog id="common-dialog" theme="{{appearanceTheme}}" theme-style="{{dialogTheme}}" />
+</view>
