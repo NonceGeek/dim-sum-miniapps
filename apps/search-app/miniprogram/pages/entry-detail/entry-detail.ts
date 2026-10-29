@@ -1,3 +1,6 @@
+import { VideoAnalytics } from '../../utils/media-analytics'
+import { PageAudio, videoHandlers } from '../../utils/page-media'
+import { track, trackPage, feedbackOutcome } from '../../utils/analytics'
 import { requireLogin } from '../../utils/auth'
 import request from '../../utils/http'
 import { createRequestId, getAnonymousId } from '../../utils/identity'
@@ -8,10 +11,21 @@ import { openModelViewer } from '../../utils/model-viewer'
 import { applyAppearance } from '../../utils/appearance'
 import { fetchEntry, type DisplayEntry } from '../../utils/search-v2'
 
-let audio: WechatMiniprogram.InnerAudioContext | undefined
 Page({
   data: { shareVisible: false, feedbackVisible: false, shareExample: '', feedbackTypes: ['内容有误', '发音问题', '功能建议', '其他问题'], feedbackType: 0, feedbackText: '', feedbackSubmitting: false, detailBottomSpace: 180, showLearning: false, favorited: false, learnExpanded: false, meaningRevealed: false, practiceCompleted: false, practiceMeaning: '', practiceAudio: '', modelScrollOffset: 0, modelViewportTop: 0, modelViewportBottom: 0, id: '', detailContent: null as ReturnType<typeof buildDetailContent> | null, entry: null as DisplayEntry | null, loading: true, error: '', unavailable: false, playingUrl: '' },
-  onLoad(options: { id?: string }) {
+  _mediaVisible: true,
+  _videos: null as VideoAnalytics | null,
+  _audio: null as PageAudio | null,
+  audio(): PageAudio { return this._audio || (this._audio = new PageAudio()) },
+  ...videoHandlers,
+  _searchQuery: '',
+  _searchSection: '',
+  _shareId: '',
+  _incomingShare: '',
+  _landingVisitId: '',
+  onLoad(options: { id?: string; from?: string; sid?: string; query?: string; section?: string }) {
+    if (options.from === 'share' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(options.sid || '')) { this._incomingShare = options.sid!; this._landingVisitId = createRequestId() }
+    if (options.query && ['primary', 'similar', 'recommended'].includes(options.section || '')) { this._searchQuery = options.query.trim().slice(0, 100); this._searchSection = options.section! }
     this.setData({ id: options.id || '' })
     this.loadEntry()
   },
@@ -25,19 +39,23 @@ Page({
     }).exec()
   },
   onPageScroll(event: WechatMiniprogram.Page.IPageScrollOption) { this.setData({ modelScrollOffset: event.scrollTop }) },
-  onShow() {
+  onShow() { this._mediaVisible = true; trackPage(this);
     applyAppearance(this)
     wx.nextTick(() => this.measureBottomBar())
     try { this.setData({ favorited: isFavorite(this.data.id) }) } catch (_) {}
   },
-  onHide() { audio?.stop(); this.setData({ playingUrl: '' }) },
-  onUnload() { audio?.destroy(); audio = undefined },
+  onHide() { this._mediaVisible = false; this._videos?.suspend(); this._audio?.stop(); this.setData({ playingUrl: '' }) },
+  onUnload() { this._mediaVisible = false; this._videos?.clear(); this._audio?.destroy() },
   async loadEntry() {
     if (this.data.loading && this.data.entry) return
     if (!this.data.id) { this.setData({ loading: false, unavailable: true, error: '该内容暂不可用' }); return }
     this.setData({ loading: true, error: '', unavailable: false })
     try {
       const entry = await fetchEntry(this.data.id)
+      if (this._incomingShare) {
+        track('share_link_open', { entryId: entry.id, shareId: this._incomingShare, landingVisitId: this._landingVisitId, sourceChannel: 'shared_link' })
+        this._incomingShare = ''
+      }
       const detailContent = buildDetailContent(entry)
       const practiceMeaning = entry.meaning || entry.content.sections.flatMap(section => section.blocks).find(block => block.type === 'definition' && block.text)?.text || ''
       const practiceAudio = entry.assets.audioUrl || detailContent.sections.find(section => section.audio)?.audio || ''
@@ -48,7 +66,7 @@ Page({
       this.setData({ loading: false, unavailable, error: unavailable ? '该内容暂不可用' : '加载失败，请重试' }, () => this.measureBottomBar())
     }
   },
-  onShareTap() { this.setData({ shareVisible: true, feedbackVisible: false }) },
+  onShareTap() { this._shareId = createRequestId(); this.setData({ shareVisible: true, feedbackVisible: false }, () => { if (this.data.shareVisible && this.data.entry) track('share_card_open', { entryId: this.data.id, shareId: this._shareId, surface: 'miniprogram' }) }) },
   onShareClose() { if (!this.data.feedbackSubmitting) this.setData({ shareVisible: false }) },
   onSheetContentTap() {},
   async onOpenFeedback() {
@@ -82,7 +100,8 @@ Page({
       const anonymousId = getAnonymousId()
       const signature = JSON.stringify([getApp<IAppOption>().globalData.userInfo?.id, anonymousId, this.data.id, type, description])
       if (signature !== this._feedbackSignature) { this._feedbackId = createRequestId(); this._feedbackSignature = signature }
-      await request('/search/feedback', { method: 'POST', auth: true, data: { requestId: this._feedbackId, anonymousId, entryId: this.data.id, type, description } })
+      const feedback = await request<{ id: string }>('/search/feedback', { method: 'POST', auth: true, data: { requestId: this._feedbackId, anonymousId, entryId: this.data.id, type, description } }).catch(error => { feedbackOutcome(this._feedbackId, type, undefined, error); throw error })
+      feedbackOutcome(this._feedbackId, type, feedback)
       this.setData({ feedbackVisible: false, feedbackText: '', feedbackType: 0 })
       this._feedbackSignature = ''; this._feedbackId = ''
       wx.showToast({ title: '反馈已提交', icon: 'success' })
@@ -106,7 +125,9 @@ Page({
     wx.showToast({ title: '已完成本次练习', icon: 'success' })
   },
   onShareAppMessage() {
-    return { title: `${this.data.entry?.expression || '粤语表达'} · 粤语随手查`, path: `/pages/entry-detail/entry-detail?id=${encodeURIComponent(this.data.id)}` }
+    const shareId = this._shareId || createRequestId()
+    track('mp_share', { entryId: this.data.id, shareId, channel: 'chat' })
+    return { title: `${this.data.entry?.expression || '粤语表达'} · 粤语随手查`, path: `/pages/entry-detail/entry-detail?id=${encodeURIComponent(this.data.id)}&from=share&sid=${shareId}` }
   },
   onPreviewImage(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { url: string }>) {
     const url = event.currentTarget.dataset.url
@@ -116,27 +137,22 @@ Page({
     openModelViewer(this.data.id, event.currentTarget.dataset.url)
   },
   onReturn() { wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/index/index' }) }) },
-  onVideoError(event: WechatMiniprogram.CustomEvent<{ errMsg?: string }>) {
-    const message = event.detail.errMsg || '视频加载失败'
-    console.warn('视频加载失败', message)
-    wx.showToast({ title: '视频加载失败，请检查网络后重试', icon: 'none' })
+  videoContext(event: WechatMiniprogram.BaseEvent) {
+    const data = event.currentTarget.dataset
+    return { entryId: String(data.entryId || ''), ...(this._searchQuery ? { query: this._searchQuery, section: this._searchSection } : {}) }
   },
   onPlayAudio(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { url: string }>) {
     const url = event.currentTarget.dataset.url
-    if (!url) return
-    if (audio?.src === url) {
-      if (this.data.playingUrl === url) audio.pause()
-      else { this.setData({ playingUrl: url }); audio.play() }
-      return
-    }
-    audio?.destroy()
-    const player = wx.createInnerAudioContext()
-    audio = player
-    player.src = url
-    this.setData({ playingUrl: url })
-    const reset = () => { if (audio === player) this.setData({ playingUrl: '' }) }
-    player.onPause(reset); player.onStop(reset); player.onEnded(reset)
-    player.onError(() => { reset(); wx.showToast({ title: '音频播放失败，请重试', icon: 'none' }) })
-    player.play()
+    const entry = this.data.entry
+    if (entry) {
+      let senseIndex = 0
+      let exampleIndex: number | undefined
+      entry.content.sections.forEach((section, index) => section.blocks.forEach(block => {
+        if (block.type === 'audio' && block.url === url) senseIndex = index
+        const found = block.examples?.findIndex(example => example.audioUrl === url) ?? -1
+        if (found >= 0) { senseIndex = index; exampleIndex = found }
+      }))
+      this.audio().play(url, this.data.playingUrl, (playingUrl: string) => this.setData({ playingUrl }), { entryId: entry.id, surface: 'entry_detail', target: exampleIndex === undefined ? 'expression' : 'example', senseIndex, ...(exampleIndex === undefined ? {} : { exampleIndex }) })
+    } else this.audio().play(url, this.data.playingUrl, (playingUrl: string) => this.setData({ playingUrl }))
   },
 })

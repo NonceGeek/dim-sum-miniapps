@@ -1,3 +1,4 @@
+import { trackPage } from '../../utils/analytics'
 import { decodeModelResource } from '../../utils/model-viewer'
 import { fetchEntry } from '../../utils/search-v2'
 import { applyAppearance } from '../../utils/appearance'
@@ -8,7 +9,7 @@ Page({
     this.loadModel()
   },
   onPageScroll(event: WechatMiniprogram.Page.IPageScrollOption) { this.setData({ modelScrollOffset: event.scrollTop }) },
-  onShow() { applyAppearance(this) },
+  onShow() { trackPage(this); applyAppearance(this) },
   async loadModel() {
     this.setData({ loading: true, error: '', url: '' })
     try {

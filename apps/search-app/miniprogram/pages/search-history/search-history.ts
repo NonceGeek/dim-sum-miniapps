@@ -1,10 +1,11 @@
+import { trackPage } from '../../utils/analytics'
 import { requireLogin } from '../../utils/auth'
 import { showCommonDialog } from '@dim-sum/common-dialog'
 import { applyAppearance } from '../../utils/appearance'
 import { readSearchHistory, type SearchHistoryItem } from '../../utils/search-history'
 Page({
   data: { authorized: false, history: [] as SearchHistoryItem[] },
-  async onShow() {
+  async onShow() { trackPage(this);
     applyAppearance(this)
     this.setData({ authorized: false, history: [] })
     if (!await requireLogin(this)) return
@@ -14,7 +15,7 @@ Page({
   onQueryTap(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { word: string }>) {
     if (!this.data.authorized) return
     const word = event.currentTarget.dataset.word
-    if (word) wx.navigateTo({ url: `/pages/search-result/search-result?keyword=${encodeURIComponent(word)}`, fail: () => wx.showToast({ title: '页面打开失败', icon: 'none' }) })
+    if (word) wx.navigateTo({ url: `/pages/search-result/search-result?keyword=${encodeURIComponent(word)}&origin=history`, fail: () => wx.showToast({ title: '页面打开失败', icon: 'none' }) })
   },
   onRemoveQuery(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { word: string }>) {
     if (!this.data.authorized) return

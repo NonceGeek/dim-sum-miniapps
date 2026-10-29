@@ -1,4 +1,6 @@
+import { trackPage } from '../../utils/analytics'
 Page({
+  onShow() { trackPage(this) },
   data: { url: '' },
   onLoad(options: { url?: string }) {
     let url = ''

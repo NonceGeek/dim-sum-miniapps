@@ -1,3 +1,4 @@
+import { analyticsShow, analyticsHide } from './utils/analytics'
 import { applyAppearance } from './utils/appearance'
 import { auth } from './utils/auth'
 App<IAppOption>({
@@ -12,6 +13,8 @@ App<IAppOption>({
     this.restoreGlobalData()
     wx.onThemeChange(() => { const pages = getCurrentPages(); const page = pages[pages.length - 1]; if (page) applyAppearance(page) })
   },
+  onShow(options) { analyticsShow(options) },
+  onHide() { analyticsHide() },
   restoreGlobalData() { auth.restoreSession() },
   doLogin() { return auth.login() },
   doPhoneLogin(phone: string, code: string) { return auth.loginWithPhone(phone, code) },

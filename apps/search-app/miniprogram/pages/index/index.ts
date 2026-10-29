@@ -1,3 +1,4 @@
+import { trackPage } from '../../utils/analytics'
 import { fetchEntry } from '../../utils/search-v2'
 import { getDailyRefreshDelay, invalidateDailyEntry, loadDailyEntry } from '../../utils/daily-entry'
 import { readSearchHistory, saveSearchHistory } from '../../utils/search-history'
@@ -21,7 +22,7 @@ Page({
     scenePlaceholders: [0, 1, 2],
   },
 
-  onShow() {
+  onShow() { trackPage(this);
     this._dailyVisible = true
     applyAppearance(this)
     this.setData({ isLoggedIn: !!getApp<IAppOption>().globalData.userInfo })
@@ -49,7 +50,7 @@ Page({
   },
 
   // 搜索提交与查询记录点击均经此触发。
-  doSearch(word: string) {
+  doSearch(word: string, origin = 'search_box') {
     const normalized = word.trim()
 
     if (!normalized || normalized.length > 100) {
@@ -60,7 +61,7 @@ Page({
     this.setData({ keyword: normalized })
     try { this.setData({ history: saveSearchHistory(normalized) }) } catch (error) { console.warn('History save failed', error) }
     wx.navigateTo({
-      url: `/pages/search-result/search-result?keyword=${encodeURIComponent(normalized)}`,
+      url: `/pages/search-result/search-result?keyword=${encodeURIComponent(normalized)}&origin=${origin}`,
       fail: () => wx.showToast({ title: '搜索页面打开失败，请重试', icon: 'none' }),
     })
   },
@@ -73,7 +74,7 @@ Page({
     const { word } = event.currentTarget.dataset
 
     if (word) {
-      this.doSearch(word)
+      this.doSearch(word, 'history')
     }
   },
 

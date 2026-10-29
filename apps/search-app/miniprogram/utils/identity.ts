@@ -6,11 +6,18 @@ export function createRequestId(): string {
   })
 }
 
+let anonymousId = ''
 export function getAnonymousId(): string {
-  const key = 'cantonese-anonymous-id'
-  const stored = wx.getStorageSync(key)
-  if (typeof stored === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(stored)) return stored
-  const id = createRequestId()
-  wx.setStorageSync(key, id)
-  return id
+  if (anonymousId) return anonymousId
+  try {
+    const key = 'cantonese-anonymous-id'
+    const stored = wx.getStorageSync(key)
+    if (typeof stored === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(stored)) { anonymousId = stored; return stored }
+    const id = createRequestId()
+    anonymousId = id
+    wx.setStorageSync(key, id)
+    return id
+  } catch (_) {
+    return anonymousId || (anonymousId = createRequestId())
+  }
 }

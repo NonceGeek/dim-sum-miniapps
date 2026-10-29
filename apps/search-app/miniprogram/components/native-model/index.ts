@@ -44,7 +44,7 @@ defineModelComponent({
         else this.deactivate()
       })
     },
-    detached() { this.mounted = false; this.observer?.disconnect(); clearTimeout(this.loadTimer); clearTimeout(this.scrollTimer) },
+    detached() { this.mounted = false; this.observer?.disconnect(); clearTimeout(this.loadTimer ?? 0); clearTimeout(this.scrollTimer ?? 0) },
   },
   pageLifetimes: {
     hide() { this.hidden = true; this.deactivate() },
@@ -68,9 +68,9 @@ defineModelComponent({
         this.loadTimer = setTimeout(() => this.onFailure({ detail: { message: '模型加载超时，请检查网络后重试' } }), 30000)
       }).exec()
     },
-    deactivate() { clearTimeout(this.loadTimer); if (this.data.active) this.setData({ active: false }) },
-    onLoaded() { clearTimeout(this.loadTimer); this.setData({ loading: false, error: '' }) },
-    onFailure(event: { detail?: { message?: string } }) { clearTimeout(this.loadTimer); this.setData({ active: false, loading: false, error: event.detail?.message || '模型加载失败，请重试' }) },
+    deactivate() { clearTimeout(this.loadTimer ?? 0); if (this.data.active) this.setData({ active: false }) },
+    onLoaded() { clearTimeout(this.loadTimer ?? 0); this.setData({ loading: false, error: '' }) },
+    onFailure(event: { detail?: { message?: string } }) { clearTimeout(this.loadTimer ?? 0); this.setData({ active: false, loading: false, error: event.detail?.message || '模型加载失败，请重试' }) },
     schedulePositionUpdate() {
       if (this.scrollTimer) return
       this.scrollTimer = setTimeout(() => {

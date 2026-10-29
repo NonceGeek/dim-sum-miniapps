@@ -1,3 +1,4 @@
+import { trackPage, feedbackOutcome } from '../../utils/analytics'
 import { invalidateDailyEntry } from '../../utils/daily-entry'
 import { applyAppearance } from '../../utils/appearance'
 import { showCommonDialog } from '@dim-sum/common-dialog'
@@ -22,7 +23,7 @@ Page({
     { key: 'feedback', icon: 'service', title: '问题反馈', hint: '欢迎提建议' },
     { key: 'about', icon: 'info-circle', title: '关于平台', hint: '' },
   ] },
-  onShow() {
+  onShow() { trackPage(this);
     applyAppearance(this)
     this.syncAuthState()
     try { const version = wx.getAccountInfoSync().miniProgram.version; if (version) this.setData({ version }) } catch (error) { console.warn('Version unavailable', error) }
@@ -109,10 +110,11 @@ Page({
       const requestId = signature === this.data.feedbackSignature && this.data.feedbackRequestId
         ? this.data.feedbackRequestId : createRequestId()
       this.setData({ feedbackRequestId: requestId, feedbackSignature: signature })
-      await request('/search/feedback', {
+      const feedback = await request<{ id: string }>('/search/feedback', {
         method: 'POST', auth: true,
         data: { requestId, anonymousId, type, description },
-      })
+      }).catch(error => { feedbackOutcome(requestId, type, undefined, error); throw error })
+      feedbackOutcome(requestId, type, feedback)
       this.setData({ activePopup: '', feedbackText: '', feedbackTypeIndex: 0, feedbackRequestId: '', feedbackSignature: '' })
       const bar = this.getTabBar(); if (bar) bar.setData({ hidden: false })
       wx.showToast({ title: '反馈已提交', icon: 'success' })

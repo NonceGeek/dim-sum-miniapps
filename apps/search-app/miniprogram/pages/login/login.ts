@@ -1,3 +1,4 @@
+import { trackPage } from '../../utils/analytics'
 import { applyAppearance } from "../../utils/appearance";
 const ENV = { title: '粤语随手查', subtitle: '查一句，学一句。', VERSION: '1.0.0' };
 const { miniProgram } = wx.getAccountInfoSync();
@@ -39,7 +40,7 @@ Page({
     this.syncTheme();
   },
 
-  onShow() {
+  onShow() { trackPage(this);
     this.syncTheme();
   },
 
