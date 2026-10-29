@@ -109,7 +109,7 @@ Page({
       const requestId = signature === this.data.feedbackSignature && this.data.feedbackRequestId
         ? this.data.feedbackRequestId : createRequestId()
       this.setData({ feedbackRequestId: requestId, feedbackSignature: signature })
-      await request('/miniprogram/search/feedback', {
+      await request('/search/feedback', {
         method: 'POST', auth: true,
         data: { requestId, anonymousId, type, description },
       })

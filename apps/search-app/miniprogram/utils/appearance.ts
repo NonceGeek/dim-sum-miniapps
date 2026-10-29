@@ -9,8 +9,8 @@ export function applyAppearance(page: WechatMiniprogram.Page.Instance<any, any>)
   const app = getApp<IAppOption>()
   app.globalData.themeMode = mode === 'system' ? 'auto' : mode
   app.globalData.theme = isDark ? 'dark' : 'light'
-  const appearanceStyle = mode === 'system' ? '' : mode === 'dark' ? dark : light
-  page.setData({ appearanceStyle, dialogTheme, appearanceLabel: mode === 'system' ? '跟随系统' : mode === 'dark' ? '深色' : '浅色' })
+  const appearanceStyle = isDark ? dark : light
+  page.setData({ appearanceTheme: isDark ? 'dark' : 'light', appearanceStyle, dialogTheme, appearanceLabel: mode === 'system' ? '跟随系统' : mode === 'dark' ? '深色' : '浅色' })
   const bar = page.getTabBar && page.getTabBar(); if (bar) bar.setData({ appearanceStyle })
   wx.setNavigationBarColor({ frontColor: isDark ? '#ffffff' : '#000000', backgroundColor: isDark ? '#131315' : '#fcf9f8' })
 }

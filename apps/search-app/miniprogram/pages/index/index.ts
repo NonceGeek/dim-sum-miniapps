@@ -1,5 +1,5 @@
 import { fetchEntry } from '../../utils/search-v2'
-import { invalidateDailyEntry, loadDailyEntry } from '../../utils/daily-entry'
+import { getDailyRefreshDelay, invalidateDailyEntry, loadDailyEntry } from '../../utils/daily-entry'
 import { readSearchHistory, saveSearchHistory } from '../../utils/search-history'
 import { applyAppearance } from '../../utils/appearance'
 import { loadRandomContextScenes, type ContextScene } from '../../utils/context-scenes'
@@ -22,12 +22,12 @@ Page({
   },
 
   onShow() {
+    this._dailyVisible = true
     applyAppearance(this)
     this.setData({ isLoggedIn: !!getApp<IAppOption>().globalData.userInfo })
     this.loadHistory()
     this.loadScenes()
     this.loadDaily()
-    this.startDailyChecks()
     const tabBar = this.getTabBar()
     if (tabBar) {
       tabBar.setData({ value: '/pages/index/index' })
@@ -108,19 +108,28 @@ Page({
   },
 
   _dailyPending: false,
-  _dailyTimer: null as ReturnType<typeof setInterval> | null,
+  _dailyVisible: false,
+  _dailyTimer: null as ReturnType<typeof setTimeout> | null,
   _dailyAudio: null as WechatMiniprogram.InnerAudioContext | null,
-  startDailyChecks() {
-    if (this._dailyTimer) clearInterval(this._dailyTimer)
-    this._dailyTimer = setInterval(() => this.loadDaily(true), 30000)
+  scheduleDailyRefresh(expiresAt?: string) {
+    if (this._dailyTimer) clearTimeout(this._dailyTimer)
+    this._dailyTimer = null
+    if (!this._dailyVisible) return
+    this._dailyTimer = setTimeout(() => {
+      this._dailyTimer = null
+      this.loadDaily()
+    }, getDailyRefreshDelay(expiresAt))
   },
   async loadDaily(backgroundCheck: unknown = false) {
     if (this._dailyPending) return
+    if (this._dailyTimer) clearTimeout(this._dailyTimer)
+    this._dailyTimer = null
     this._dailyPending = true
     this.setData({ dailyLoading: !this.data.daily && !this.data.dailyUnavailable })
     try {
       const result = await loadDailyEntry(backgroundCheck === true)
       if (result.error === 'SKIP') return
+      if (!result.error && !result.offline) this.scheduleDailyRefresh(result.response?.expiresAt)
       const entry = result.response?.entry
       const sense = entry?.senses[0]
       if (this.data.daily?.id !== entry?.id) this.stopDailyAudio()
@@ -170,9 +179,11 @@ Page({
     if (this._dailyAudio) this._dailyAudio.stop()
     this.setData({ dailyPlaying: false })
   },
-  onHide() { this.stopDailyAudio(); if (this._dailyTimer) clearInterval(this._dailyTimer); this._dailyTimer = null },
+  onHide() { this._dailyVisible = false; this.stopDailyAudio(); if (this._dailyTimer) clearTimeout(this._dailyTimer); this._dailyTimer = null },
   onUnload() {
-    if (this._dailyTimer) clearInterval(this._dailyTimer)
+    this._dailyVisible = false
+    if (this._dailyTimer) clearTimeout(this._dailyTimer)
+    this._dailyTimer = null
     if (this._dailyAudio) this._dailyAudio.destroy()
     this._dailyAudio = null
   },

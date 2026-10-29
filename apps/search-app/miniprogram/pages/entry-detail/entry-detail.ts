@@ -82,7 +82,7 @@ Page({
       const anonymousId = getAnonymousId()
       const signature = JSON.stringify([getApp<IAppOption>().globalData.userInfo?.id, anonymousId, this.data.id, type, description])
       if (signature !== this._feedbackSignature) { this._feedbackId = createRequestId(); this._feedbackSignature = signature }
-      await request('/miniprogram/search/feedback', { method: 'POST', auth: true, data: { requestId: this._feedbackId, anonymousId, entryId: this.data.id, type, description } })
+      await request('/search/feedback', { method: 'POST', auth: true, data: { requestId: this._feedbackId, anonymousId, entryId: this.data.id, type, description } })
       this.setData({ feedbackVisible: false, feedbackText: '', feedbackType: 0 })
       this._feedbackSignature = ''; this._feedbackId = ''
       wx.showToast({ title: '反馈已提交', icon: 'success' })
