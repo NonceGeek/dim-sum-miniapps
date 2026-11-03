@@ -34,8 +34,14 @@ type AudioContext = Parameters<typeof observeAudio>[2]
 export class PageAudio {
   private player?: WechatMiniprogram.InnerAudioContext
   private observation?: ReturnType<typeof observeAudio>
-  stop() { this.observation?.cancel(); this.player?.stop() }
-  destroy() { this.observation?.cancel(); this.player?.destroy(); this.player = undefined }
+  stop() { this.destroy() }
+  destroy() {
+    const player = this.player
+    this.player = undefined
+    this.observation?.cancel()
+    this.observation = undefined
+    player?.destroy()
+  }
   play(url: string, playingUrl: string, update: (url: string) => void, context?: AudioContext, onDuration?: (duration: number) => void) {
     if (!url) return
     if (this.player?.src === url) {

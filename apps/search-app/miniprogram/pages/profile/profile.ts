@@ -1,7 +1,6 @@
 import { restoreLoginState } from '../../utils/auth'
 import { API } from '../../config/api'
 import { trackPage, feedbackOutcome } from '../../utils/analytics'
-import { invalidateDailyEntry } from '../../utils/daily-entry'
 import { applyAppearance } from '../../utils/appearance'
 import { showCommonDialog } from '@dim-sum/common-dialog'
 import { requireLogin } from '../../utils/auth'
@@ -129,11 +128,6 @@ Page({
       this.setData({ feedbackSubmitting: false })
     }
   },
-  onClearCache() {
-    showCommonDialog(this, { title: '清理临时缓存？', content: '仅清理临时检索缓存，保留查询记录。', showCancel: true, onConfirm: () => {
-      try { wx.removeStorageSync('cantonese-search-cache'); invalidateDailyEntry(); wx.showToast({ title: '临时缓存已清理', icon: 'none' }) }
-      catch (error) { wx.showToast({ title: '清理失败，请重试', icon: 'none' }) }
-    } })
-  },
+
 })
 export {}

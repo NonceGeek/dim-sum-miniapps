@@ -10,6 +10,7 @@ import {
 import {
   readSearchHistory,
   saveSearchHistory,
+  type SearchHistoryItem,
 } from "../../utils/search-history";
 import { applyAppearance } from "../../utils/appearance";
 import {
@@ -34,7 +35,7 @@ Page({
     dailyPlaying: false,
     dailyLabel: "今日一句",
     dailyUnavailable: false,
-    history: [] as { word: string; phonetic: string }[],
+    history: [] as SearchHistoryItem[],
     scenes: [] as ContextScene[],
     sceneError: "",
     scenesLoading: true,
