@@ -7,6 +7,11 @@ image {
   box-sizing: border-box;
 }
 page {
+  --ds-radius-card: 24rpx;
+  --ds-radius-panel: 32rpx;
+  --ds-radius-button: 999rpx;
+  --td-action-sheet-border-radius: var(--ds-radius-panel);
+  --td-popup-border-radius: var(--ds-radius-panel);
   --ds-bg: #fcf9f8;
   --ds-surface: #ffffff;
   --ds-surface-low: #f6f3f2;
@@ -127,7 +132,7 @@ button::after {
   box-shadow: var(--ds-shadow);
 }
 .ds-elevated-card {
-  border-radius: 32rpx;
+  border-radius: var(--ds-radius-card, 24rpx);
 }
 .stitch-tabbar {
   --td-tab-bar-bg-color: var(--ds-bg);
@@ -217,7 +222,7 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 40rpx;
+  border-radius: var(--ds-radius-button, 999rpx);
   color: var(--ds-home-white);
   background: var(--ds-home-blue);
   font-size: 24rpx;

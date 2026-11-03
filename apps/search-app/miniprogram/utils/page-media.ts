@@ -40,21 +40,27 @@ export class PageAudio {
     if (!url) return
     if (this.player?.src === url) {
       if (playingUrl === url) this.player.pause()
-      else { update(url); this.observation?.resume(); this.player.play() }
+      else { this.observation?.resume(); this.player.play() }
       return
     }
     this.destroy()
     const player = wx.createInnerAudioContext()
     this.player = player
-    player.src = url
-    update(url)
+    player.volume = 1
     const reset = () => { if (this.player === player) update('') }
+    player.onPlay(() => { if (this.player === player) update(url) })
     player.onPause(reset); player.onStop(reset); player.onEnded(reset)
     if (onDuration) player.onCanplay(() => {
       if (this.player === player && Number.isFinite(player.duration) && player.duration > 0) onDuration(player.duration)
     })
-    player.onError(() => { reset(); wx.showToast({ title: '音频播放失败，请重试', icon: 'none' }) })
+    player.onError(error => {
+      if (this.player !== player) return
+      console.warn('音频播放失败', error.errCode, error.errMsg)
+      reset()
+      wx.showToast({ title: '音频播放失败，请重试', icon: 'none' })
+    })
     this.observation = context ? observeAudio(player, url, context) : undefined
+    player.src = url
     player.play()
   }
 }

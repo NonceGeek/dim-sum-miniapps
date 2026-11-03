@@ -48,7 +48,7 @@
           <view class="code-input-row">
             <t-input borderless="{{true}}" class="code-input" placeholder="请输入验证码" value="{{code}}" bind:change="onCodeChange" type="number"
               maxlength="6" clearable="{{true}}" />
-            <t-button class="send-code-btn" theme="primary" shape="round" size="medium" variant="outline" bind:tap="sendCode"
+            <t-button class="send-code-btn" custom-style="width: auto; min-width: 0; margin: 0; background-color: var(--ds-surface-low); color: {{counting || !phone ? 'var(--ds-outline)' : 'var(--ds-text)'}};" shape="round" size="medium" variant="outline" bind:tap="sendCode"
               disabled="{{counting || !phone}}" loading="{{sendingCode}}">
               <t-count-down wx:if="{{counting}}" time="{{60000}}" format="ss秒" bind:finish="onCountDownFinish" />
               <text wx:else>{{codeButtonText}}</text>

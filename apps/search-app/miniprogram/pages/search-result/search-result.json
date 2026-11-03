@@ -2,7 +2,8 @@
   "usingComponents": {
     "t-icon": "/miniprogram_npm/tdesign-miniprogram/icon/icon",
     "app-tab-bar": "/custom-tab-bar/index",
-    "native-model": "/components/native-model/index"
+    "native-model": "/components/native-model/index",
+    "common-dialog": "@dim-sum/common-dialog/dialog/index"
   },
   "navigationBarTitleText": "搜索结果"
 }

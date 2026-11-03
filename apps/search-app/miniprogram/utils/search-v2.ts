@@ -4,6 +4,7 @@ import type { Entry } from './search-types'
 type Example = { text: string; translation: string | null; jyutping: string | null; audioUrl: string | null }
 export type ContentBlock = { type: string; text: string | null; url: string | null; examples: Example[] }
 export type V2Entry = {
+  updatedAt?: string | null
   entryId: string; corpusId: number; entryName: string; meaning: string | null; jyutping: string | null
   contentAttribute: string; mediaTypes: string[]; available: boolean
   source: { categoryName: string; categoryDisplayName: string | null }
@@ -20,6 +21,7 @@ export type V2Entry = {
 export type DisplayEntry = Omit<Entry, 'senses'> & {
   corpusId: number; categoryLine: string; primaryCategory: string; secondaryCategory: string; sceneTags: string[]; primaryTags: string[]; secondaryTags: string[]; audioUrl: string
   meaning: string | null; jyutping: string | null;
+  updatedDate: string
   assets: V2Entry['assets']; content: V2Entry['content']
 }
 export type SearchResponse = {
@@ -28,6 +30,7 @@ export type SearchResponse = {
   cursors: { similarNext: string | null; recommendedNext: string | null }
 }
 export function normalizeEntry(row: V2Entry): DisplayEntry {
+  const updatedDate = row.updatedAt?.match(/^(\d{4})-(\d{2})-(\d{2})T/)
   const secondary = row.category.secondary?.name
   const primaryTags = Array.from(new Set([...row.tags.precise, ...row.tags.related].map(tag => tag.name)))
   const secondaryTags = Array.from(new Set(row.tags.recommended.map(tag => tag.name))).filter(name => !primaryTags.includes(name))
@@ -37,6 +40,7 @@ export function normalizeEntry(row: V2Entry): DisplayEntry {
     categoryLine: [row.category.primary?.name, secondary].filter(Boolean).join(' › '),
     primaryCategory: row.category.primary?.name || '', secondaryCategory: secondary || '',
     sceneTags: Array.from(new Set([...row.tags.precise, ...row.tags.related, ...row.tags.recommended].map(tag => tag.name))).filter(name => name !== secondary),
+    updatedDate: updatedDate ? `${updatedDate[1]}年${Number(updatedDate[2])}月${Number(updatedDate[3])}日` : '',
     meaning: row.meaning, jyutping: row.jyutping,
     primaryTags, secondaryTags, audioUrl: row.assets.audioUrl || '', assets: row.assets, content: row.content,
   }

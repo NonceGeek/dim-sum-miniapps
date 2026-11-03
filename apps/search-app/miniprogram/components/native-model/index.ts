@@ -1,10 +1,72 @@
-// The API must provide the model file URL; viewer pages are not model assets.
+// Native rendering accepts model files; legacy viewer pages are resolved below.
 function resolveModelSource(url: unknown): string {
   if (typeof url !== 'string' || !/^https:\/\/[^/?#]+\//i.test(url)) return ''
   if (/\.(glb|gltf)([?#]|$)/i.test(url)) return url
   return ''
 }
+function htmlAttribute(tag: string, name: string): string {
+  const match = tag.match(new RegExp('\\s' + name + '\\s*=\\s*(?:"([^"]*)"|\'([^\']*)\')', 'i'))
+  return (match?.[1] || match?.[2] || '').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;/g, "'")
+}
+
+function absoluteModelUrl(value: string, base: string): string {
+  if (/^https:\/\//i.test(value)) return value
+  if (value.startsWith('//')) return 'https:' + value
+  if (!value || /^[a-z][a-z0-9+.-]*:/i.test(value)) return ''
+  const match = base.match(/^(https:\/\/[^/?#]+)([^?#]*)/i)
+  if (!match) return ''
+  const path = value.startsWith('/') ? value : match[2].replace(/[^/]*$/, '') + value
+  const parts: string[] = []
+  const suffixIndex = path.search(/[?#]/)
+  const pathname = suffixIndex < 0 ? path : path.slice(0, suffixIndex)
+  for (const part of pathname.split('/')) {
+    if (part === '..') parts.pop()
+    else if (part !== '.') parts.push(part)
+  }
+  return match[1] + parts.join('/') + (suffixIndex < 0 ? '' : path.slice(suffixIndex))
+}
+
+function parseViewerModel(html: string, viewerUrl: string): string {
+  const markup = html.replace(/<!--[\s\S]*?-->/g, '')
+  const baseTag = markup.match(/<base\b[^>]*>/i)?.[0] || ''
+  const baseHref = htmlAttribute(baseTag, 'href')
+  const base = baseHref ? absoluteModelUrl(baseHref, viewerUrl) : viewerUrl
+  const tag = markup.match(/<model-viewer\b[^>]*>/i)?.[0] || ''
+  return resolveModelSource(absoluteModelUrl(htmlAttribute(tag, 'src'), base))
+}
+
+async function loadModelSource(url: string): Promise<string> {
+  const direct = resolveModelSource(url)
+  if (direct) return direct
+  if (!/^https:\/\/[^/?#]+\//i.test(url)) throw new Error('模型地址无效')
+  // Directory-style viewer links are requested with a trailing slash so relative assets resolve correctly.
+  const viewerUrl = url.replace(/^(https:\/\/[^?#]*)([?#].*)?$/i, (_, path: string, suffix: string = '') =>
+    path.endsWith('/') || /\.[^/]+$/.test(path) ? path + suffix : path + '/' + suffix)
+  const html = await new Promise<string>((resolve, reject) => wx.request<string>({
+    url: viewerUrl,
+    dataType: '其他', // 微信类型定义用“其他”表示不进行 JSON 解析。
+    responseType: 'text',
+    timeout: 15000,
+    success(response) {
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        reject(new Error('模型展示页加载失败'))
+        return
+      }
+      if (typeof response.data !== 'string' || response.data.length > 512000) {
+        reject(new Error('模型展示页格式不受支持'))
+        return
+      }
+      resolve(response.data)
+    },
+    fail: () => reject(new Error('模型地址解析失败，请检查网络后重试')),
+  }))
+  const source = parseViewerModel(html, viewerUrl)
+  if (!source) throw new Error('展示页未提供可直接加载的 GLB/GLTF 模型')
+  return source
+}
+
 type ModelState = {
+  sourceVersion?: number
   mounted?: boolean
   hidden?: boolean
   inViewport?: boolean
@@ -23,6 +85,15 @@ function defineModelComponent<
 
 defineModelComponent({
   properties: {
+    suspended: {
+      type: Boolean,
+      value: false,
+      observer(value: boolean) {
+        if (!this.mounted) return
+        if (value) this.deactivate()
+        else if (this.inViewport) this.activate()
+      },
+    },
     src: { type: String, observer() { if (this.mounted) this.prepare() } },
     height: { type: Number, value: 440 },
     dark: { type: Boolean, value: false },
@@ -36,7 +107,6 @@ defineModelComponent({
     attached() { this.mounted = true; this.prepare() },
     ready() {
       this.mounted = true
-      this.prepare()
       this.observer = this.createIntersectionObserver({ thresholds: [0, 1] })
       this.observer.relativeToViewport().observe('.model-preview', result => {
         this.inViewport = result.intersectionRatio > 0
@@ -51,16 +121,25 @@ defineModelComponent({
     show() { this.hidden = false; if (this.inViewport) this.activate() },
   },
   methods: {
-    prepare() {
+    async prepare() {
       this.deactivate()
-      const source = resolveModelSource(this.data.src)
-      this.setData({ source, loading: true, error: source ? '' : '该资源暂未提供可用的原生 3D 模型' })
-      if (this.inViewport) this.activate()
+      const version = (this.sourceVersion || 0) + 1
+      this.sourceVersion = version
+      this.setData({ source: '', loading: true, error: '' })
+      try {
+        const source = await loadModelSource(this.data.src)
+        if (!this.mounted || this.sourceVersion !== version) return
+        this.setData({ source })
+        if (this.inViewport) this.activate()
+      } catch (error) {
+        if (!this.mounted || this.sourceVersion !== version) return
+        this.setData({ loading: false, error: error instanceof Error ? error.message : '模型地址解析失败' })
+      }
     },
     activate() {
-      if (!this.mounted || this.hidden || this.data.active || !this.data.source || this.data.error) return
+      if (!this.mounted || this.hidden || this.data.suspended || this.data.active || !this.data.source || this.data.error) return
       this.createSelectorQuery().select('.model-preview').boundingClientRect(rect => {
-        if (!rect || !this.mounted || this.hidden || !this.inViewport || this.data.active) return
+        if (!rect || !this.mounted || this.hidden || this.data.suspended || !this.inViewport || this.data.active) return
         const info = wx.getSystemInfoSync()
         if (rect.top < this.data.viewportTop || rect.bottom > (this.data.viewportBottom || info.windowHeight)) return
         const ratio = Math.min(info.pixelRatio || 1, 2)
@@ -79,9 +158,9 @@ defineModelComponent({
       }, 16)
     },
     updatePosition() {
-      if (!this.mounted || this.hidden) return
+      if (!this.mounted || this.hidden || this.data.suspended) return
       this.createSelectorQuery().select('.model-preview').boundingClientRect(rect => {
-        if (!rect || !this.mounted || this.hidden) return
+        if (!rect || !this.mounted || this.hidden || this.data.suspended) return
         const bottom = this.data.viewportBottom || wx.getSystemInfoSync().windowHeight
         const fullyVisible = rect.top >= this.data.viewportTop && rect.bottom <= bottom
         this.inViewport = rect.bottom > this.data.viewportTop && rect.top < bottom
@@ -91,6 +170,6 @@ defineModelComponent({
       }).exec()
     },
     onExpand() { this.triggerEvent('expand', { url: this.data.src }) },
-    onRetry() { this.deactivate(); this.setData({ error: '', loading: true }); this.activate() },
+    onRetry() { this.prepare() },
   },
 })

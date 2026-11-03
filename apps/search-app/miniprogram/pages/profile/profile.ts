@@ -1,3 +1,5 @@
+import { restoreLoginState } from '../../utils/auth'
+import { API } from '../../config/api'
 import { trackPage, feedbackOutcome } from '../../utils/analytics'
 import { invalidateDailyEntry } from '../../utils/daily-entry'
 import { applyAppearance } from '../../utils/appearance'
@@ -17,16 +19,15 @@ const feedbackErrors: Record<string, string> = {
   SERVICE_UNAVAILABLE: '服务暂不可用，请稍后重试',
 }
 Page({
-  data: { themeSheetVisible: false, themeOptions: [] as { label: string; value: string; color: string }[], isLoggedIn: false, displayName: '游客', avatarText: '点', avatarUrl: '', version: '1.0.0', historyCount: 0, activePopup: '', feedbackTypes: ['内容有误', '发音问题', '功能建议', '其他问题'], feedbackTypeIndex: 0, feedbackText: '', feedbackSubmitting: false, feedbackRequestId: '', feedbackSignature: '', menuItems: [
+  data: { themeSheetVisible: false, themeOptions: [] as { label: string; value: string; color: string }[], isLoggedIn: false, displayName: '游客', avatarText: '点', avatarUrl: '', version: API.version, historyCount: 0, activePopup: '', feedbackTypes: ['内容有误', '发音问题', '功能建议', '其他问题'], feedbackTypeIndex: 0, feedbackText: '', feedbackSubmitting: false, feedbackRequestId: '', feedbackSignature: '', menuItems: [
     { key: 'history', icon: 'history', title: '最近查询', hint: '' },
     { key: 'appearance', icon: 'sunny', title: '外观模式', hint: '' },
     { key: 'feedback', icon: 'service', title: '问题反馈', hint: '欢迎提建议' },
     { key: 'about', icon: 'info-circle', title: '关于平台', hint: '' },
   ] },
-  onShow() { trackPage(this);
+  onShow() { restoreLoginState(); trackPage(this);
     applyAppearance(this)
     this.syncAuthState()
-    try { const version = wx.getAccountInfoSync().miniProgram.version; if (version) this.setData({ version }) } catch (error) { console.warn('Version unavailable', error) }
     const bar = this.getTabBar(); if (bar) bar.setData({ value: '/pages/profile/profile', hidden: Boolean(this.data.activePopup) })
     try {
       const history = wx.getStorageSync('cantonese-search-history')

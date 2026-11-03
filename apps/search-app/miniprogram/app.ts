@@ -13,7 +13,18 @@ App<IAppOption>({
     this.restoreGlobalData()
     wx.onThemeChange(() => { const pages = getCurrentPages(); const page = pages[pages.length - 1]; if (page) applyAppearance(page) })
   },
-  onShow(options) { analyticsShow(options) },
+  onShow(options) {
+    if (!this.globalData.accessToken && !this.globalData.refreshToken) {
+      this.restoreGlobalData()
+    }
+    // 从其他小程序返回时重新应用发音播放选项。
+    wx.setInnerAudioOption({
+      obeyMuteSwitch: false,
+      speakerOn: true,
+      fail: error => console.warn('音频播放选项设置失败', error),
+    })
+    analyticsShow(options)
+  },
   onHide() { analyticsHide() },
   restoreGlobalData() { auth.restoreSession() },
   doLogin() { return auth.login() },

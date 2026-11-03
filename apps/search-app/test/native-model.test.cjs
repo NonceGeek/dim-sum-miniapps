@@ -6,8 +6,10 @@ const { stripTypeScriptTypes } = require('node:module')
 const nativeModelSource = stripTypeScriptTypes(fs.readFileSync(require.resolve('../miniprogram/components/native-model/index.ts'), 'utf8'))
 const { resolveModelSource } = vm.runInNewContext(`${nativeModelSource}\n;({ resolveModelSource })`, { Component() {} })
 
-test('model sources use API-provided HTTPS files without viewer mappings', () => {
-  assert.equal(resolveModelSource('https://oss.aidimsum.com/vox-ship/'), '')
+test('model sources accept HTTPS model files and reject viewer pages', () => {
+  for (const url of ['https://oss.aidimsum.com/vox-ship', 'https://oss.aidimsum.com/vox-ship/']) {
+    assert.equal(resolveModelSource(url), '')
+  }
   assert.equal(resolveModelSource('https://example.com/model.glb?signature=abc'), 'https://example.com/model.glb?signature=abc')
   assert.equal(resolveModelSource('https://example.com/model.gltf'), 'https://example.com/model.gltf')
   for (const source of ['http://example.com/model.glb', 'https://example.com/viewer', 'https://evil.example/vox-ship', '', null]) assert.equal(resolveModelSource(source), '')
@@ -68,4 +70,14 @@ test('scrolling repositions a visible scene without destroying it, and hides cli
   rect = { ...rect, top: 20, bottom: 240 }
   resume()
   assert.equal(instance.data.active, false, 'a partially clipped scene cannot cover the search header')
+})
+
+test('viewer pages resolve their own model paths without resource mappings', () => {
+  const { parseViewerModel } = vm.runInNewContext(`${nativeModelSource}\n;({ parseViewerModel })`, { Component() {} })
+  assert.equal(parseViewerModel('<model-viewer src="assets/boat.glb"></model-viewer>', 'https://example.com/boats/'), 'https://example.com/boats/assets/boat.glb')
+  assert.equal(parseViewerModel("<model-viewer src='../models/tree.gltf?key=a&amp;b=c'>", 'https://example.com/viewers/tree.html'), 'https://example.com/models/tree.gltf?key=a&b=c')
+  assert.equal(parseViewerModel('<base href="/shared/"><model-viewer src="tree.glb">', 'https://example.com/viewer/'), 'https://example.com/shared/tree.glb')
+  assert.equal(parseViewerModel('<model-viewer src="https://cdn.example.com/car.glb">', 'https://example.com/viewer/'), 'https://cdn.example.com/car.glb')
+  assert.equal(parseViewerModel('<!-- <model-viewer src="old.glb"> --><model-viewer src="new.glb">', 'https://example.com/viewer/'), 'https://example.com/viewer/new.glb')
+  assert.equal(parseViewerModel('<model-viewer src="javascript:alert(1)">', 'https://example.com/viewer/'), '')
 })

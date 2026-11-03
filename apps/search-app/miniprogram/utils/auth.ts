@@ -7,6 +7,12 @@ export const auth = createAuthClient({
   miniprogramApp: API.miniprogramApp,
   getState: () => getApp<IAppOption>().globalData,
 })
+// 开发者工具热重载可能重置 globalData，却保留本地凭证。
+export function restoreLoginState() {
+  const state = getApp<IAppOption>().globalData
+  if (!state.accessToken && !state.refreshToken) auth.restoreSession()
+}
+
 let prompting = false
 
 // UI 策略属于当前 app；公共鉴权/请求包不强制页面跳转。
@@ -27,7 +33,7 @@ export function promptLogin(host?: WechatMiniprogram.Page.Instance<any, any>, on
 }
 
 export async function requireLogin(host: WechatMiniprogram.Page.Instance<any, any>, onAuthenticated?: () => void): Promise<boolean> {
-  try { await auth.ensureLogin(); return true }
+  try { restoreLoginState(); await auth.ensureLogin(); return true }
   catch (error) {
     if (isAuthRequired(error)) promptLogin(host, onAuthenticated)
     else wx.showToast({ title: error instanceof Error ? error.message : '登录状态检查失败', icon: 'none' })

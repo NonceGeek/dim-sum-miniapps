@@ -1,7 +1,6 @@
 import { trackPage } from '../../utils/analytics'
 import { applyAppearance } from "../../utils/appearance";
-const ENV = { title: '粤语随手查', subtitle: '查一句，学一句。', VERSION: '1.0.0' };
-const { miniProgram } = wx.getAccountInfoSync();
+import { API } from '../../config/api'
 
 function getLoginErrorMessage(error: any, fallback: string): string {
   const candidates = [error?.message, error?.errMsg, error?.error?.message, error?.error, error];
@@ -28,7 +27,7 @@ Page({
     sendingCode: false,
     logining: false,
     agreedToTerms: false,
-    version: miniProgram.version || `${ENV.VERSION}`,
+    version: API.version,
   },
 
   onLoad(options: { redirect?: string; returnToPrevious?: string }) {

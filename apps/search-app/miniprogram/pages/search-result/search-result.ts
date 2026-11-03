@@ -1,7 +1,9 @@
+import { restoreLoginState } from '../../utils/auth'
+import { showCommonDialog } from '@dim-sum/common-dialog'
 import { VideoAnalytics } from '../../utils/media-analytics'
 import { PageAudio, videoHandlers } from '../../utils/page-media'
 import { track, trackPage } from '../../utils/analytics'
-import { saveSearchHistory } from '../../utils/search-history'
+import { readSearchHistory, saveSearchHistory, type SearchHistoryItem } from '../../utils/search-history'
 import { openModelViewer } from '../../utils/model-viewer'
 import { applyAppearance } from '../../utils/appearance'
 import { createRequestId } from '../../utils/identity'
@@ -20,6 +22,7 @@ let searchSerial = 0
 let filterSerial = 0
 Page({
   data: { modelScrollOffset: 0, modelViewportTop: 0, modelViewportBottom: 0,
+    searchFocused: false, historyOpen: false, historyMatches: [] as SearchHistoryItem[],
     keyword: '', searchedKeyword: '', mediaType: '', relatedFiltered: false,
     mediaFilters: [{ value: '', label: '全部' }, { value: 'text', label: '纯文本' }, { value: 'audio', label: '音频' }, { value: 'video', label: '视频' }, { value: 'image', label: '图片' }, { value: 'model3d', label: '3D 模型' }],
     direct: [] as DisplayEntry[], related: [] as DisplayEntry[], recommended: [] as DisplayEntry[], requestId: '',
@@ -50,7 +53,7 @@ Page({
     this.setData({ modelScrollOffset: event.detail.scrollTop })
   },
   onShow() { this._mediaVisible = true; trackPage(this); applyAppearance(this) },
-  onHide() { this._mediaVisible = false; this._videos?.suspend(); this._audio?.stop(); this.setData({ playingUrl: '' }) },
+  onHide() { this._mediaVisible = false; this._videos?.suspend(); this._audio?.stop(); this.setData({ playingUrl: '', historyOpen: false }) },
   onUnload() { this._mediaVisible = false; this._videos?.clear(); ++searchSerial; this._audio?.destroy() },
   onLoad(query: { keyword?: string; origin?: string; from?: string }) {
     const keyword = query.keyword ? decodeURIComponent(query.keyword) : ''
@@ -58,6 +61,7 @@ Page({
     if (keyword) this.search(keyword, false, query.origin === 'history' ? 'history' : 'search_box', query.from !== 'share')
   },
   async search(keyword: string, retry = false, origin = 'search_box', submit = true) {
+    this.setData({ historyOpen: false })
     keyword = keyword.trim()
     if (!keyword || keyword.length > 100) {
       wx.showToast({ title: '请输入 1–100 字符的关键词', icon: 'none' })
@@ -144,13 +148,64 @@ Page({
       wx.nextTick(() => { if (this._mediaVisible) track('search_section_impression', props) })
     }
   },
-  onSearchChange(event: WechatMiniprogram.CustomEvent<{ value: string }>) { this.setData({ keyword: event.detail.value }) },
+  refreshHistorySuggestions() {
+    restoreLoginState()
+    const { userInfo, accessToken, refreshToken } = getApp<IAppOption>().globalData
+    if (!userInfo || !(accessToken || refreshToken)) {
+      this.setData({ historyOpen: false, historyMatches: [] })
+      return
+    }
+    try {
+      const query = this.data.keyword.trim().toLowerCase()
+      const historyMatches = readSearchHistory().filter(item => item.word.toLowerCase().includes(query))
+      this.setData({ historyOpen: historyMatches.length > 0, historyMatches })
+    } catch (error) {
+      console.warn('History load failed', error)
+      this.setData({ historyOpen: false, historyMatches: [] })
+    }
+  },
+  onSearchFocus() {
+    this.setData({ searchFocused: true })
+    this.refreshHistorySuggestions()
+  },
+  onSearchBlur() { this.setData({ searchFocused: false }) },
+  onHistoryDismiss() {
+    this.setData({ historyOpen: false, searchFocused: false })
+    wx.hideKeyboard()
+  },
+  onHistorySelect(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { word: string }>) {
+    const word = event.currentTarget.dataset.word
+    this.onHistoryDismiss()
+    if (word) this.search(word, false, 'history')
+  },
+  onHistoryClear() {
+    wx.hideKeyboard()
+    showCommonDialog(this, {
+      title: '清空搜索记录？',
+      content: '清空后无法恢复。',
+      showCancel: true,
+      cancelText: '取消',
+      confirmText: '清空',
+      onConfirm: () => {
+        try {
+          wx.removeStorageSync('cantonese-search-history')
+          this.setData({ historyOpen: false, historyMatches: [] })
+        } catch (_) {
+          wx.showToast({ title: '清空失败，请重试', icon: 'none' })
+        }
+      },
+    })
+  },
+  onSearchChange(event: WechatMiniprogram.CustomEvent<{ value: string }>) {
+    this.setData({ keyword: event.detail.value })
+    this.refreshHistorySuggestions()
+  },
   onSearchSubmit(event?: WechatMiniprogram.CustomEvent<{ value: string }>) {
     const keyword = (event?.detail?.value ?? this.data.keyword).trim()
     if (!keyword) { wx.showToast({ title: '请输入搜索关键词', icon: 'none' }); return }
     this.search(keyword)
   },
-  onClearTap() { this.setData({ keyword: '' }) },
+  onClearTap() { this.setData({ keyword: '' }); this.refreshHistorySuggestions() },
   onShareAppMessage() {
     const keyword = this.data.searchedKeyword || this.data.keyword
     const shareId = createRequestId()

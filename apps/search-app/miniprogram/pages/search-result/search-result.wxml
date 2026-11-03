@@ -1,12 +1,20 @@
 <view style="{{appearanceStyle}}" class="page ds-page">
   <view class="search-header">
-    <view class="search-glow {{!keyword ? 'search-glow--idle' : ''}}"><view class="search-shell">
+    <view class="search-composer search-glow {{!keyword ? 'search-glow--idle' : ''}} {{historyOpen ? 'search-composer--open' : ''}} {{searchFocused ? 'search-composer--focused' : ''}}"><view class="search-composer-body"><view class="search-shell">
       <t-icon name="search" size="34rpx" color="var(--ds-outline)" />
-      <input class="search-native" value="{{keyword}}" placeholder="搜索粤语表达…" placeholder-class="search-placeholder" bindinput="onSearchChange" bindconfirm="onSearchSubmit" confirm-type="search" />
+      <input class="search-native" value="{{keyword}}" placeholder="搜索粤语表达…" placeholder-class="search-placeholder" bindfocus="onSearchFocus" bindblur="onSearchBlur" bindinput="onSearchChange" bindconfirm="onSearchSubmit" confirm-type="search" />
       <view wx:if="{{keyword}}" class="search-clear" role="button" aria-label="清空搜索" bindtap="onClearTap"><t-icon name="close" size="28rpx" color="var(--ds-outline)" /></view>
       <button class="search-submit" bindtap="onSearchSubmit">搜索</button>
+    </view>
+    <view wx:if="{{historyOpen}}" class="history-dropdown">
+      <view class="history-dropdown-head"><text>最近搜索</text><button hover-class="none" bindtap="onHistoryClear">清空</button></view>
+      <scroll-view scroll-y class="history-dropdown-list">
+        <button wx:for="{{historyMatches}}" wx:key="word" class="history-dropdown-item" hover-class="history-dropdown-item--pressed" data-word="{{item.word}}" bindtap="onHistorySelect"><t-icon name="history" size="30rpx" /><text>{{item.word}}</text></button>
+      </scroll-view>
+    </view>
     </view></view>
   </view>
+  <view wx:if="{{historyOpen}}" class="history-dropdown-dismiss" bindtap="onHistoryDismiss" />
 
   <scroll-view bindscroll="onResultScroll" class="result-scroll" scroll-y enhanced show-scrollbar="{{false}}">
     <view wx:if="{{loading}}" class="search-skeleton" aria-label="正在搜索" aria-busy="true">
@@ -38,7 +46,7 @@
             <text wx:if="{{entry.meaning}}" class="sense-meaning">{{entry.meaning}}</text>
           </view>
           <view class="entry-media" wx:if="{{entry.assets.videoUrl || entry.assets.coverImage}}"><video data-video-key="video-1-{{entry.id}}" data-url="{{entry.assets.videoUrl}}" data-entry-id="{{entry.id}}" binderror="onVideoError" bindplay="onVideoPlay" bindtimeupdate="onVideoProgress" bindpause="onVideoPause" bindended="onVideoPause" wx:if="{{entry.assets.videoUrl}}" src="{{entry.assets.videoUrl}}" poster="{{entry.assets.coverImage}}" controls /><image wx:elif="{{entry.assets.coverImage}}" src="{{entry.assets.coverImage}}" mode="widthFix" data-url="{{entry.assets.coverImage}}" bindtap="onPreviewImage" /></view>
-          <view wx:if="{{entry.assets.model3dUrl}}" class="entry-model"><native-model scroll-offset="{{modelScrollOffset}}" viewport-top="{{modelViewportTop}}" viewport-bottom="{{modelViewportBottom}}" id="native-{{entry.id}}" data-id="{{entry.id}}" data-url="{{entry.assets.model3dUrl}}" bindexpand="onOpenModel" src="{{entry.assets.model3dUrl}}" dark="{{appearanceTheme === 'dark'}}" /></view>
+          <view wx:if="{{entry.assets.model3dUrl}}" class="entry-model"><native-model suspended="{{historyOpen}}" scroll-offset="{{modelScrollOffset}}" viewport-top="{{modelViewportTop}}" viewport-bottom="{{modelViewportBottom}}" id="native-{{entry.id}}" data-id="{{entry.id}}" data-url="{{entry.assets.model3dUrl}}" bindexpand="onOpenModel" src="{{entry.assets.model3dUrl}}" dark="{{appearanceTheme === 'dark'}}" /></view>
           <view class="entry-card__footer"><view class="entry-card__grid"><view class="entry-meta-row"><text class="entry-meta-label">来源语料集</text><text class="entry-meta-value">{{entry.source.datasetName}}</text></view><view wx:if="{{entry.primaryCategory}}" class="entry-meta-row"><text class="entry-meta-label">一级分类</text><text class="entry-meta-value">{{entry.primaryCategory}}</text></view><view wx:if="{{entry.secondaryCategory}}" class="entry-meta-row"><text class="entry-meta-label">二级分类</text><text class="entry-meta-value">{{entry.secondaryCategory}}</text></view></view></view>
           <view wx:if="{{entry.primaryTags.length || entry.secondaryTags.length}}" class="entry-tag-groups"><view wx:if="{{entry.primaryTags.length}}" class="scene-tags scene-tags--primary"><text wx:for="{{entry.primaryTags}}" wx:key="*this" class="scene-tag scene-tag--primary">{{item}}</text></view><view wx:if="{{entry.secondaryTags.length}}" class="scene-tags scene-tags--secondary"><text wx:for="{{entry.secondaryTags}}" wx:key="*this" class="scene-tag">{{item}}</text></view></view>
           <view wx:if="{{entry.source.licenses.length}}" class="entry-card__tags"><text wx:for="{{entry.source.licenses}}" wx:key="*this" class="entry-tag">{{item}}</text></view>
@@ -59,7 +67,7 @@
             <text wx:if="{{entry.meaning}}" class="sense-meaning">{{entry.meaning}}</text>
           </view>
           <view class="entry-media" wx:if="{{entry.assets.videoUrl || entry.assets.coverImage}}"><video data-video-key="video-2-{{entry.id}}" data-url="{{entry.assets.videoUrl}}" data-entry-id="{{entry.id}}" binderror="onVideoError" bindplay="onVideoPlay" bindtimeupdate="onVideoProgress" bindpause="onVideoPause" bindended="onVideoPause" wx:if="{{entry.assets.videoUrl}}" src="{{entry.assets.videoUrl}}" poster="{{entry.assets.coverImage}}" controls /><image wx:elif="{{entry.assets.coverImage}}" src="{{entry.assets.coverImage}}" mode="widthFix" data-url="{{entry.assets.coverImage}}" bindtap="onPreviewImage" /></view>
-          <view wx:if="{{entry.assets.model3dUrl}}" class="entry-model"><native-model scroll-offset="{{modelScrollOffset}}" viewport-top="{{modelViewportTop}}" viewport-bottom="{{modelViewportBottom}}" id="native-{{entry.id}}" data-id="{{entry.id}}" data-url="{{entry.assets.model3dUrl}}" bindexpand="onOpenModel" src="{{entry.assets.model3dUrl}}" dark="{{appearanceTheme === 'dark'}}" /></view>
+          <view wx:if="{{entry.assets.model3dUrl}}" class="entry-model"><native-model suspended="{{historyOpen}}" scroll-offset="{{modelScrollOffset}}" viewport-top="{{modelViewportTop}}" viewport-bottom="{{modelViewportBottom}}" id="native-{{entry.id}}" data-id="{{entry.id}}" data-url="{{entry.assets.model3dUrl}}" bindexpand="onOpenModel" src="{{entry.assets.model3dUrl}}" dark="{{appearanceTheme === 'dark'}}" /></view>
           <view class="entry-card__footer"><view class="entry-card__grid"><view class="entry-meta-row"><text class="entry-meta-label">来源语料集</text><text class="entry-meta-value">{{entry.source.datasetName}}</text></view><view wx:if="{{entry.primaryCategory}}" class="entry-meta-row"><text class="entry-meta-label">一级分类</text><text class="entry-meta-value">{{entry.primaryCategory}}</text></view><view wx:if="{{entry.secondaryCategory}}" class="entry-meta-row"><text class="entry-meta-label">二级分类</text><text class="entry-meta-value">{{entry.secondaryCategory}}</text></view></view></view>
           <view wx:if="{{entry.primaryTags.length || entry.secondaryTags.length}}" class="entry-tag-groups"><view wx:if="{{entry.primaryTags.length}}" class="scene-tags scene-tags--primary"><text wx:for="{{entry.primaryTags}}" wx:key="*this" class="scene-tag scene-tag--primary">{{item}}</text></view><view wx:if="{{entry.secondaryTags.length}}" class="scene-tags scene-tags--secondary"><text wx:for="{{entry.secondaryTags}}" wx:key="*this" class="scene-tag">{{item}}</text></view></view>
           <view wx:if="{{entry.source.licenses.length}}" class="entry-card__tags"><text wx:for="{{entry.source.licenses}}" wx:key="*this" class="entry-tag">{{item}}</text></view>
@@ -79,7 +87,7 @@
             <text wx:if="{{entry.meaning}}" class="sense-meaning">{{entry.meaning}}</text>
           </view>
           <view class="entry-media" wx:if="{{entry.assets.videoUrl || entry.assets.coverImage}}"><video data-video-key="video-3-{{entry.id}}" data-url="{{entry.assets.videoUrl}}" data-entry-id="{{entry.id}}" binderror="onVideoError" bindplay="onVideoPlay" bindtimeupdate="onVideoProgress" bindpause="onVideoPause" bindended="onVideoPause" wx:if="{{entry.assets.videoUrl}}" src="{{entry.assets.videoUrl}}" poster="{{entry.assets.coverImage}}" controls /><image wx:elif="{{entry.assets.coverImage}}" src="{{entry.assets.coverImage}}" mode="widthFix" data-url="{{entry.assets.coverImage}}" bindtap="onPreviewImage" /></view>
-          <view wx:if="{{entry.assets.model3dUrl}}" class="entry-model"><native-model scroll-offset="{{modelScrollOffset}}" viewport-top="{{modelViewportTop}}" viewport-bottom="{{modelViewportBottom}}" id="native-{{entry.id}}" data-id="{{entry.id}}" data-url="{{entry.assets.model3dUrl}}" bindexpand="onOpenModel" src="{{entry.assets.model3dUrl}}" dark="{{appearanceTheme === 'dark'}}" /></view>
+          <view wx:if="{{entry.assets.model3dUrl}}" class="entry-model"><native-model suspended="{{historyOpen}}" scroll-offset="{{modelScrollOffset}}" viewport-top="{{modelViewportTop}}" viewport-bottom="{{modelViewportBottom}}" id="native-{{entry.id}}" data-id="{{entry.id}}" data-url="{{entry.assets.model3dUrl}}" bindexpand="onOpenModel" src="{{entry.assets.model3dUrl}}" dark="{{appearanceTheme === 'dark'}}" /></view>
           <view class="entry-card__footer"><view class="entry-card__grid"><view class="entry-meta-row"><text class="entry-meta-label">来源语料集</text><text class="entry-meta-value">{{entry.source.datasetName}}</text></view><view wx:if="{{entry.primaryCategory}}" class="entry-meta-row"><text class="entry-meta-label">一级分类</text><text class="entry-meta-value">{{entry.primaryCategory}}</text></view><view wx:if="{{entry.secondaryCategory}}" class="entry-meta-row"><text class="entry-meta-label">二级分类</text><text class="entry-meta-value">{{entry.secondaryCategory}}</text></view></view></view>
           <view wx:if="{{entry.primaryTags.length || entry.secondaryTags.length}}" class="entry-tag-groups"><view wx:if="{{entry.primaryTags.length}}" class="scene-tags scene-tags--primary"><text wx:for="{{entry.primaryTags}}" wx:key="*this" class="scene-tag scene-tag--primary">{{item}}</text></view><view wx:if="{{entry.secondaryTags.length}}" class="scene-tags scene-tags--secondary"><text wx:for="{{entry.secondaryTags}}" wx:key="*this" class="scene-tag">{{item}}</text></view></view>
           <view wx:if="{{entry.source.licenses.length}}" class="entry-card__tags"><text wx:for="{{entry.source.licenses}}" wx:key="*this" class="entry-tag">{{item}}</text></view>
@@ -96,4 +104,5 @@
   </scroll-view>
 
   <app-tab-bar appearance-style="{{appearanceStyle}}" navigate-on-active="{{true}}" />
+  <common-dialog id="common-dialog" theme="{{appearanceTheme}}" theme-style="{{dialogTheme}}" />
 </view>

@@ -19,11 +19,23 @@ Page({
   },
   onRemoveQuery(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { word: string }>) {
     if (!this.data.authorized) return
-    try {
-      const history = readSearchHistory().filter(item => item.word !== event.currentTarget.dataset.word)
-      wx.setStorageSync('cantonese-search-history', history)
-      this.setData({ history })
-    } catch (_) { wx.showToast({ title: '删除失败，请重试', icon: 'none' }) }
+    const word = event.currentTarget.dataset.word
+    if (!word) return
+    showCommonDialog(this, {
+      title: '删除这条搜索记录？',
+      content: `删除「${word}」后无法恢复。`,
+      showCancel: true,
+      cancelText: '取消',
+      confirmText: '删除',
+      onConfirm: () => {
+        if (!this.data.authorized) return
+        try {
+          const history = readSearchHistory().filter(item => item.word !== word)
+          wx.setStorageSync('cantonese-search-history', history)
+          this.setData({ history })
+        } catch (_) { wx.showToast({ title: '删除失败，请重试', icon: 'none' }) }
+      },
+    })
   },
   onClearHistory() {
     if (!this.data.authorized) return
