@@ -30,14 +30,45 @@ export const videoHandlers = {
   },
 }
 
+export function observeAudioLoading(player: WechatMiniprogram.InnerAudioContext) {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let visible = false
+  let disposed = false
+  const hide = () => {
+    if (timer !== undefined) clearTimeout(timer)
+    timer = undefined
+    if (visible) wx.hideToast()
+    visible = false
+  }
+  const wait = () => {
+    if (disposed || timer || visible) return
+    timer = setTimeout(() => {
+      timer = undefined
+      visible = true
+      wx.showToast({ title: '正在加载中，请稍后', icon: 'loading', duration: 2000 })
+    }, 300)
+  }
+  player.onWaiting(wait)
+  player.onPlay(hide)
+  player.onPause(hide)
+  player.onStop(hide)
+  player.onEnded(hide)
+  player.onError(hide)
+  wait()
+  return () => { disposed = true; hide() }
+}
+
 type AudioContext = Parameters<typeof observeAudio>[2]
 export class PageAudio {
   private player?: WechatMiniprogram.InnerAudioContext
   private observation?: ReturnType<typeof observeAudio>
+  private cancelLoading?: () => void
   stop() { this.destroy() }
   destroy() {
     const player = this.player
     this.player = undefined
+    this.cancelLoading?.()
+    this.cancelLoading = undefined
     this.observation?.cancel()
     this.observation = undefined
     player?.destroy()
@@ -53,6 +84,8 @@ export class PageAudio {
     const player = wx.createInnerAudioContext()
     this.player = player
     player.volume = 1
+    player.autoplay = true
+    this.cancelLoading = observeAudioLoading(player)
     const reset = () => { if (this.player === player) update('') }
     player.onPlay(() => { if (this.player === player) update(url) })
     player.onPause(reset); player.onStop(reset); player.onEnded(reset)
@@ -67,6 +100,5 @@ export class PageAudio {
     })
     this.observation = context ? observeAudio(player, url, context) : undefined
     player.src = url
-    player.play()
   }
 }

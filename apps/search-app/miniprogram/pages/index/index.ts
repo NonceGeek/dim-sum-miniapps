@@ -1,3 +1,4 @@
+import { observeAudioLoading } from '../../utils/page-media'
 import { restoreLoginState } from '../../utils/auth'
 import { showCommonDialog } from '@dim-sum/common-dialog'
 import { trackPage } from "../../utils/analytics";
@@ -176,6 +177,7 @@ Page({
     this.loadScenes();
   },
 
+  _dailyLoadingCancel: undefined as (() => void) | undefined,
   _dailyPending: false,
   _dailyVisible: false,
   _dailyTimer: null as ReturnType<typeof setTimeout> | null,
@@ -267,6 +269,8 @@ Page({
   stopDailyAudio() {
     const audio = this._dailyAudio;
     this._dailyAudio = null;
+    this._dailyLoadingCancel?.();
+    this._dailyLoadingCancel = undefined;
     audio?.destroy();
     this.setData({ dailyPlaying: false });
   },
@@ -291,6 +295,8 @@ Page({
     }
     if (!this._dailyAudio) {
       const audio = wx.createInnerAudioContext();
+      audio.autoplay = true;
+      this._dailyLoadingCancel = observeAudioLoading(audio);
       audio.onPlay(() => {
         if (this._dailyAudio === audio && this._dailyVisible)
           this.setData({ dailyPlaying: true });
@@ -312,7 +318,7 @@ Page({
       this._dailyAudio = audio;
     }
     if (this._dailyAudio.src !== url) this._dailyAudio.src = url;
-    this._dailyAudio.play();
+    else this._dailyAudio.play();
   },
 });
 

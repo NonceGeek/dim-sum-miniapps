@@ -24,6 +24,7 @@ export function buildDetailContent(entry: DisplayEntry) {
   const containsText = (text: string | null | undefined) => Boolean(text && blocks.some(block => block.text === text))
   const containsMedia = (type: string, url: string | null) => Boolean(url && blocks.some(block => block.type === type && block.url === url))
   return {
+    hasBodyContent: Boolean(sections.some(section => section.blocks.length) || entry.meaning || entry.content.usageNotes || entry.assets.videoUrl || entry.assets.coverImage || entry.assets.model3dUrl || entry.assets.videoTranscript),
     sections,
     heroAudio: sections.length === 1 && sections[0].audio ? sections[0].audio : containsMedia('audio', entry.assets.audioUrl) ? '' : entry.assets.audioUrl || '',
     topJyutping: entry.jyutping && !sections.some(section => section.jyutping === entry.jyutping) ? entry.jyutping : '',
