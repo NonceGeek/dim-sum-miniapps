@@ -45,7 +45,7 @@ export function observeAudioLoading(player: WechatMiniprogram.InnerAudioContext)
     timer = setTimeout(() => {
       timer = undefined
       visible = true
-      wx.showToast({ title: '正在加载中，请稍后', icon: 'loading', duration: 2000 })
+      wx.showToast({ title: '正在加载中', icon: 'loading', duration: 2000 })
     }, 300)
   }
   player.onWaiting(wait)
