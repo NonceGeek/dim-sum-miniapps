@@ -29,7 +29,7 @@
   </view>
 
   <!-- 手机号登录弹窗 -->
-  <t-popup t-class="app-themed-bottom-popup theme-{{currentTheme}}" visible="{{showPhonePopup}}" placement="bottom" bind:visible-change="onPopupClose"
+  <t-popup t-class="app-themed-bottom-popup theme-{{currentTheme}}" custom-style="background-color: var(--ds-bg);" visible="{{showPhonePopup}}" placement="bottom" bind:visible-change="onPopupClose"
     close-on-overlay-click="{{true}}" rounded="{{true}}">
     <view class="phone-login-popup theme-{{currentTheme}}">
       <view class="popup-header">

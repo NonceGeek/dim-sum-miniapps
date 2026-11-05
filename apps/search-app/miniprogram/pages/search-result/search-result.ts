@@ -210,7 +210,7 @@ Page({
     const keyword = this.data.searchedKeyword || this.data.keyword
     const shareId = createRequestId()
     track('mp_share', { shareId, channel: 'chat' })
-    return { title: `${keyword} · 粤语随手查`, path: `/pages/search-result/search-result?keyword=${encodeURIComponent(keyword)}&from=share&sid=${shareId}` }
+    return { title: "粤语表达分享", path: `/pages/search-result/search-result?keyword=${encodeURIComponent(keyword)}&from=share&sid=${shareId}` }
   },
   onOpenModel(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { id: string; url: string }>) {
     openModelViewer(event.currentTarget.dataset.id, event.currentTarget.dataset.url)

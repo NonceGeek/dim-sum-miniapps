@@ -83,8 +83,8 @@ Page({
   },
   _feedbackId: '',
   _feedbackSignature: '',
-  onFeedbackType(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { index: number }>) {
-    if (!this.data.feedbackSubmitting) this.setData({ feedbackType: Number(event.currentTarget.dataset.index) })
+  onFeedbackType(event: WechatMiniprogram.CustomEvent<{ index: number }>) {
+    if (!this.data.feedbackSubmitting) this.setData({ feedbackType: Number(event.detail.index) })
   },
   onFeedbackInput(event: WechatMiniprogram.CustomEvent<{ value: string }>) {
     if (!this.data.feedbackSubmitting) this.setData({ feedbackText: event.detail.value })
@@ -127,7 +127,7 @@ Page({
   onShareAppMessage() {
     const shareId = this._shareId || createRequestId()
     track('mp_share', { entryId: this.data.id, shareId, channel: 'chat' })
-    return { title: `${this.data.entry?.expression || '粤语表达'} · 粤语随手查`, path: `/pages/entry-detail/entry-detail?id=${encodeURIComponent(this.data.id)}&from=share&sid=${shareId}` }
+    return { title: `粤语表达分享`, path: `/pages/entry-detail/entry-detail?id=${encodeURIComponent(this.data.id)}&from=share&sid=${shareId}` }
   },
   onPreviewImage(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { url: string }>) {
     const url = event.currentTarget.dataset.url

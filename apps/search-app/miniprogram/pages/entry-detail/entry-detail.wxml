@@ -1,14 +1,14 @@
-<view class="detail-page ds-page" style="{{appearanceStyle}};padding-bottom:{{detailBottomSpace}}px;">
+<view class="detail-page ds-page detail-theme-{{appearanceTheme}}" style="{{appearanceStyle}};padding-bottom:{{detailBottomSpace}}px;">
   <view wx:if="{{loading}}" class="detail-state">正在加载表达…</view>
   <view wx:elif="{{error}}" class="detail-state"><text>{{error}}</text><button class="detail-retry" bindtap="{{unavailable ? 'onReturn' : 'loadEntry'}}">{{unavailable ? '返回搜索' : '重新加载'}}</button></view>
   <block wx:elif="{{entry}}">
     <view wx:if="{{entry.primaryTags.length}}" class="detail-tag-list"><text wx:for="{{entry.primaryTags}}" wx:key="*this" class="detail-eyebrow">{{item}}</text></view>
-    <view class="detail-heading"><text class="detail-word">{{entry.expression}}</text><button wx:if="{{detailContent.heroAudio}}" class="detail-play" size="mini" data-url="{{detailContent.heroAudio}}" bindtap="onPlayAudio" aria-label="播放表达"><t-icon name="{{playingUrl === detailContent.heroAudio ? 'pause' : 'play'}}" size="36rpx" /></button></view>
+    <view class="detail-heading"><text class="detail-word">{{entry.expression}}</text><button wx:if="{{detailContent.heroAudio}}" class="detail-play" hover-class="audio-play--pressed" size="mini" data-url="{{detailContent.heroAudio}}" bindtap="onPlayAudio" aria-label="播放表达"><t-icon name="{{playingUrl === detailContent.heroAudio ? 'pause' : 'play'}}" size="36rpx" /></button></view>
     <view wx:if="{{detailContent.topJyutping}}" class="detail-reading"><text class="detail-phonetic">{{detailContent.topJyutping}}</text></view>
     <view wx:if="{{detailContent.topMeaning}}" class="detail-section"><text class="detail-title">解释</text><text class="detail-body">{{detailContent.topMeaning}}</text></view>
     <view wx:if="{{detailContent.topUsage}}" class="detail-section"><text class="detail-title">用法说明</text><text class="detail-body">{{detailContent.topUsage}}</text></view>
     <view wx:for="{{detailContent.sections}}" wx:for-item="section" wx:for-index="sectionIndex" wx:key="sectionIndex" class="structured-section {{sectionIndex === 0 ? 'structured-section--first' : ''}}">
-      <view wx:if="{{section.jyutping || section.audio}}" class="section-pronunciation"><view class="section-pronunciation__main"><text wx:if="{{detailContent.sections.length > 1}}" class="section-pronunciation__label">读音 {{sectionIndex + 1}}</text><text wx:if="{{section.jyutping}}" class="detail-phonetic">{{section.jyutping}}</text></view><button wx:if="{{section.audio && section.audio !== detailContent.heroAudio}}" class="example-play" size="mini" data-url="{{section.audio}}" bindtap="onPlayAudio" aria-label="播放读音"><t-icon name="{{playingUrl === section.audio ? 'pause' : 'play'}}" size="36rpx" /></button></view>
+      <view wx:if="{{section.jyutping || section.audio}}" class="section-pronunciation"><view class="section-pronunciation__main"><text wx:if="{{detailContent.sections.length > 1}}" class="section-pronunciation__label">读音 {{sectionIndex + 1}}</text><text wx:if="{{section.jyutping}}" class="detail-phonetic">{{section.jyutping}}</text></view><button wx:if="{{section.audio && section.audio !== detailContent.heroAudio}}" class="example-play" hover-class="audio-play--pressed" size="mini" data-url="{{section.audio}}" bindtap="onPlayAudio" aria-label="播放读音"><t-icon name="{{playingUrl === section.audio ? 'pause' : 'play'}}" size="36rpx" /></button></view>
       <view wx:for="{{section.blocks}}" wx:for-item="block" wx:for-index="blockIndex" wx:key="blockIndex" class="structured-block {{!block.showLabel ? 'structured-block--continuation' : ''}}">
         <text wx:if="{{block.showLabel}}" class="structured-block__label">{{block.label}}</text>
         <text wx:if="{{block.text}}" class="detail-body structured-block__text">{{block.text}}</text>
@@ -16,7 +16,7 @@
         <video data-video-key="video-block-{{index}}-{{blockIndex}}" data-url="{{block.url}}" data-entry-id="{{id}}" wx:if="{{block.type === 'video' && block.url}}" class="detail-video" src="{{block.url}}" controls binderror="onVideoError" bindplay="onVideoPlay" bindtimeupdate="onVideoProgress" bindpause="onVideoPause" bindended="onVideoPause" />
         <image wx:if="{{block.type === 'image' && block.url}}" class="detail-image" src="{{block.url}}" mode="widthFix" data-url="{{block.url}}" bindtap="onPreviewImage" />
         <native-model wx:if="{{(block.type === 'model3d' || block.type === 'voxel') && block.url}}" scroll-offset="{{modelScrollOffset}}" viewport-top="{{modelViewportTop}}" viewport-bottom="{{modelViewportBottom}}" data-url="{{block.url}}" bindexpand="onOpenModel" src="{{block.url}}" dark="{{appearanceTheme === 'dark'}}" />
-        <view wx:if="{{block.type === 'example'}}" wx:for="{{block.examples}}" wx:for-item="example" wx:for-index="exampleIndex" wx:key="exampleIndex" class="example-card"><view class="example-heading"><text class="example-text">{{example.text}}</text><button wx:if="{{example.audioUrl}}" class="example-play" size="mini" data-url="{{example.audioUrl}}" bindtap="onPlayAudio" aria-label="播放例句"><t-icon name="{{playingUrl === example.audioUrl ? 'pause' : 'play'}}" size="36rpx" /></button></view><text wx:if="{{example.jyutping}}" class="example-phonetic">{{example.jyutping}}</text><text wx:if="{{example.translation}}" class="detail-body">{{example.translation}}</text></view>
+        <view wx:if="{{block.type === 'example'}}" wx:for="{{block.examples}}" wx:for-item="example" wx:for-index="exampleIndex" wx:key="exampleIndex" class="example-card"><view class="example-heading"><text class="example-text">{{example.text}}</text><button wx:if="{{example.audioUrl}}" class="example-play" hover-class="audio-play--pressed" size="mini" data-url="{{example.audioUrl}}" bindtap="onPlayAudio" aria-label="播放例句"><t-icon name="{{playingUrl === example.audioUrl ? 'pause' : 'play'}}" size="36rpx" /></button></view><text wx:if="{{example.jyutping}}" class="example-phonetic">{{example.jyutping}}</text><text wx:if="{{example.translation}}" class="detail-body">{{example.translation}}</text></view>
       </view>
     </view>
     <video data-video-key="video-top" data-url="{{detailContent.topVideo}}" data-entry-id="{{id}}" binderror="onVideoError" bindplay="onVideoPlay" bindtimeupdate="onVideoProgress" bindpause="onVideoPause" bindended="onVideoPause" wx:if="{{detailContent.topVideo}}" class="detail-video" src="{{detailContent.topVideo}}" poster="{{entry.assets.coverImage}}" controls />
@@ -53,13 +53,9 @@
         </block>
 
       </scroll-view>
-      <view class="share-tabs"><button class="share-tab share-tab--active" open-type="share">分享卡片</button><button class="share-tab" bindtap="onOpenFeedback">问题反馈</button></view>
+      <view class="share-tabs"><button class="share-tab share-tab--active" open-type="share" bindtap="onShareClose">分享卡片</button><button class="share-tab" bindtap="onOpenFeedback">问题反馈</button></view>
     </view>
   </view>
-  <view wx:if="{{feedbackVisible}}" class="share-mask" catchtap="onFeedbackClose">
-    <view class="share-sheet" catchtap="onSheetContentTap"><view class="share-handle"></view><view class="share-heading"><text>问题反馈</text><view class="share-close" role="button" aria-label="关闭" bindtap="onFeedbackClose"><t-icon name="close" size="32rpx" /></view></view><scroll-view class="share-body" scroll-y>
-        <block><text class="share-feedback-label">请选择问题类型</text><view class="feedback-options"><button wx:for="{{feedbackTypes}}" wx:key="*this" class="feedback-option {{feedbackType === index ? 'feedback-option--active' : ''}}" data-index="{{index}}" bindtap="onFeedbackType">{{item}}</button></view><textarea class="share-feedback-input" value="{{feedbackText}}" placeholder="描述问题，最多 300 字" maxlength="300" disabled="{{feedbackSubmitting}}" bindinput="onFeedbackInput" /><button class="share-submit" disabled="{{feedbackSubmitting}}" loading="{{feedbackSubmitting}}" bindtap="onFeedbackSubmit">{{feedbackSubmitting ? '提交中…' : '提交反馈'}}</button></block>
-    </scroll-view></view>
-  </view>
+  <feedback-sheet visible="{{feedbackVisible}}" types="{{feedbackTypes}}" selected-index="{{feedbackType}}" text="{{feedbackText}}" submitting="{{feedbackSubmitting}}" bind:close="onFeedbackClose" bind:typechange="onFeedbackType" bind:textchange="onFeedbackInput" bind:submit="onFeedbackSubmit" />
   <common-dialog id="common-dialog" theme="{{appearanceTheme}}" theme-style="{{dialogTheme}}" />
 </view>

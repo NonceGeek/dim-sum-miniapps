@@ -82,9 +82,9 @@ Page({
   },
   closePopup() { if (this.data.feedbackSubmitting) return; this.setData({ activePopup: '' }); const bar = this.getTabBar(); if (bar) bar.setData({ hidden: false }) },
   onPopupContentTap() {},
-  onFeedbackTypeTap(event: WechatMiniprogram.BaseEvent<WechatMiniprogram.IAnyObject, { index: number }>) {
+  onFeedbackTypeTap(event: WechatMiniprogram.CustomEvent<{ index: number }>) {
     if (this.data.feedbackSubmitting) return
-    const index = Number(event.currentTarget.dataset.index)
+    const index = Number(event.detail.index)
     if (!Number.isInteger(index) || !feedbackTypeCodes[index]) return
     if (index !== this.data.feedbackTypeIndex) this.setData({ feedbackTypeIndex: index, feedbackRequestId: '', feedbackSignature: '' })
   },
