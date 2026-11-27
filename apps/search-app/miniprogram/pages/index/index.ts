@@ -1,7 +1,8 @@
 import { observeAudioLoading } from '../../utils/page-media'
 import { restoreLoginState } from '../../utils/auth'
 import { showCommonDialog } from '@dim-sum/common-dialog'
-import { trackPage } from "../../utils/analytics";
+import { track, trackPage } from "../../utils/analytics";
+import { createRequestId } from "../../utils/identity";
 import { fetchEntry } from "../../utils/search-v2";
 import {
   getDailyRefreshDelay,
@@ -41,6 +42,28 @@ Page({
     sceneError: "",
     scenesLoading: true,
     scenePlaceholders: [0, 1, 2],
+  },
+
+  onLoad() {
+    wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
+  },
+
+  onShareAppMessage() {
+    const shareId = createRequestId();
+    track('mp_share', { shareId, channel: 'chat' });
+    return {
+      title: '随时查粤语、学表达',
+      path: `/pages/index/index?from=share&sid=${shareId}`,
+    };
+  },
+
+  onShareTimeline() {
+    const shareId = createRequestId();
+    track('mp_share', { shareId, channel: 'timeline' });
+    return {
+      title: '粤语随手查',
+      query: `from=share&sid=${shareId}`,
+    };
   },
 
   onShow() { restoreLoginState();
